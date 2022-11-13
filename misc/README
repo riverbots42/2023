@@ -1,0 +1,5 @@
+Files in this directory:
+
+riverbots.svg: Vector-format version of our logo.
+riverbots.bmp: Same, but in old-skool Windows bitmap format.
+riverbots.kicad_mod: Same, but in a format that it can be imported into the kicad program for PCB creation.
