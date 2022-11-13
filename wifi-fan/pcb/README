@@ -1,0 +1,7 @@
+Files in this directory:
+
+600px-OPiZero_pinout.jpg - The pinout of the OrangePi Zero and what each pin is on the headers.
+opi-zero-gpio-pins-768x716.png - The GPIO name (that the board knows) mapped to the one that Linux knows about.
+winning-amp.jpg - The audio amplifier design I went with.
+winning-pcb-rendered.jpg - The final PCB that I ordered from PCBWay (in glorious 3D).
+winning-pcb-schematic.jpg - The final PCB that I ordered from PCBWay (in schematic format).
