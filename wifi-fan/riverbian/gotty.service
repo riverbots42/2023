@@ -1,0 +1,11 @@
+[Unit]
+Description=Access the terminal via the internal website.
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/gotty --port 8081 --permit-write /bin/login
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

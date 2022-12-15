@@ -1,0 +1,13 @@
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+
+auto wlan0
+iface wlan0 inet static
+	address 10.68.45.1
+	netmask 255.255.255.0
+	up sysctl -w net.ipv4.ip_forward=1
+	up iptables -t nat -F POSTROUTING
+	up iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
