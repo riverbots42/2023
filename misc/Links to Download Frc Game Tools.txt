@@ -1,0 +1,33 @@
+(Download for tools to drive robot.  Very unlikely that you will need this on your home computer)
+Instructions: https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/frc-game-tools.html
+(Offline version downloaded on this computer)
+
+Activation User/Pass
+User: ashsriverbots@gmail.com
+Pass: Astoria6845
+
+
+(Download for WPILib, what you will need to be writing code with)
+WPILib:
+Instructions:
+https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html
+Download location:
+https://github.com/wpilibsuite/allwpilib/releases/download/v2023.1.1/WPILib_Windows-2023.1.1.iso
+
+1.) I recommend "Download for this computer only (fastest) option, as it will download VS Code for you.
+
+
+Git with VS Code
+
+https://code.visualstudio.com/docs/sourcecontrol/overview
+https://git-scm.com/download/win
+
+You will need two general git things to get all this to behave:
+
+https://git-scm.com/download/win (look at the "Your Identity" bit).  You will need to set your name/email address.
+
+Example (for the laptops that we're using for the ashsriverbots user):
+
+git config --global user.name "Astoria Riverbots"
+git config --global user.email "ashsriverbots@gmail.com"
+
