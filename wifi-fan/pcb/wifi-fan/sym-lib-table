@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "wifi-fan-rescue")(type "Legacy")(uri "${KIPRJMOD}/wifi-fan-rescue.lib")(options "")(descr ""))
+)
