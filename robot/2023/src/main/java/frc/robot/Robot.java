@@ -27,11 +27,9 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class Robot extends TimedRobot {
   private static final int LEFT_TRIGGER = 2;
   private static final int RIGHT_TRIGGER = 3;
-  TalonSRX leftyA = new TalonSRX(0);
-  TalonSRX leftyB = new TalonSRX(1);
-  TalonSRX rightyA = new TalonSRX(2);
-  TalonSRX rightyB = new TalonSRX(3);
-  VictorSPX basket = new VictorSPX(4);
+  VictorSPX lefty = new VictorSPX(0);
+  VictorSPX righty = new VictorSPX(1);
+
   AddressableLED ledsT = new AddressableLED(0);
   AddressableLEDBuffer ledBuffT = new AddressableLEDBuffer(30);
   
@@ -73,8 +71,8 @@ public class Robot extends TimedRobot {
     // We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.
-    rightyA.setInverted(true);
-    rightyB.setInverted(true);
+    righty.setInverted(true);
+    //rightyB.setInverted(true);
     horn.set(false);
 
     // Initializes the cameras (uses a special UI that we do not have)
@@ -153,7 +151,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void teleopPeriodic() {
-    basket.set(ControlMode.PercentOutput, (stick.getRawAxis(LEFT_TRIGGER) / 2) - (stick.getRawAxis(RIGHT_TRIGGER) / 2));
+   // basket.set(ControlMode.PercentOutput, (stick.getRawAxis(LEFT_TRIGGER) / 2) - (stick.getRawAxis(RIGHT_TRIGGER) / 2));
 
     if (stick.getRawButtonPressed(1)) {
       is_reverse = !is_reverse;
@@ -236,10 +234,8 @@ public class Robot extends TimedRobot {
     
     // converts output to a decimal percent to prevent the motors from having only o
     // and 100 power
-    leftyA.set(ControlMode.PercentOutput, 1.0 * lout / 100.0);
-    leftyB.set(ControlMode.PercentOutput, 1.0 * lout / 100.0);
-    rightyA.set(ControlMode.PercentOutput, 1.0 * rout / 100.0);
-    rightyB.set(ControlMode.PercentOutput, 1.0 * rout / 100.0);
+    lefty.set(ControlMode.PercentOutput, 1.0 * lout / 100.0);
+    righty.set(ControlMode.PercentOutput, 1.0 * rout / 100.0);
   }
 
   /** This function is called once each time the robot enters test mode. */
