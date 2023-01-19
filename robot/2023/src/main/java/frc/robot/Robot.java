@@ -2,249 +2,121 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-// Sources for Team 6845 (Grommit) below.  Here be dragons.
-
 package frc.robot;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-
-import edu.wpi.first.wpilibj.AddressableLED;
-import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.DigitalOutput;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.UsbCamera;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+//import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import edu.wpi.first.wpilibj.Joystick;
 
 /**
- * Concrete implementation of the TimedRobot class for team 6845.
+ * The VM is configured to automatically run this class, and to call the functions corresponding to
+ * each mode, as described in the TimedRobot documentation. If you change the name of this class or
+ * the package after creating this project, you must also update the build.gradle file in the
+ * project.
  */
 public class Robot extends TimedRobot {
-  private static final int LEFT_TRIGGER = 2;
-  private static final int RIGHT_TRIGGER = 3;
-  VictorSPX lefty = new VictorSPX(0);
-  VictorSPX righty = new VictorSPX(1);
-
-  AddressableLED ledsT = new AddressableLED(0);
-  AddressableLEDBuffer ledBuffT = new AddressableLEDBuffer(30);
-  
-  DigitalOutput horn = new DigitalOutput(0);
-
-  int ltarget = 0;
-  int rtarget = 0;
-  int rout = 0;
-  int lout = 0;
-  int throttleStep = 1;
-  int throttle = 55;
-  int previousPov = 0;
-  int lcal = 0;
-  int rcal = 0;
-  int maxValue = 105;
-  int minValue = 5;
-  int changeInThrottle = 10;
-  int stickDirectlyLeft = 270;
-  int stickDirectlyRight = 90;
-
+  private Command m_autonomousCommand;
   private final Joystick stick = new Joystick(0);
-  private final Timer m_timer = new Timer();
 
-  boolean reverse_triggered = false;
-  boolean is_reverse = false;
-  boolean STOP = false;
+  VictorSPX leftMotorController = new VictorSPX(0);
+  VictorSPX rightMotorController = new VictorSPX(1);
 
-  UsbCamera fronty;
-  UsbCamera reary;
-  NetworkTableEntry cam;
+  private RobotContainer m_robotContainer;
 
   /**
-   * This function is run when the robot is first started up and should be used
-   * for any
+   * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   @Override
   public void robotInit() {
-    // We need to invert one side of the drivetrain so that positive voltages
-    // result in both sides moving forward. Depending on how your robot's
-    // gearbox is constructed, you might have to invert the left side instead.
-    righty.setInverted(true);
-    //rightyB.setInverted(true);
-    horn.set(false);
-
-    // Initializes the cameras (uses a special UI that we do not have)
-    cam = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
-    fronty = CameraServer.startAutomaticCapture(0);
-    reary = CameraServer.startAutomaticCapture(1);
+    // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
+    // autonomous chooser on the dashboard.
+    m_robotContainer = new RobotContainer();
+    System.out.println("I have assumed control of the Riverbot code base.");
   }
 
-  /** This function is run once each time the robot enters autonomous mode. */
+  /**
+   * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
+   * that you want ran during disabled, autonomous, teleoperated and test.
+   *
+   * <p>This runs after the mode specific periodic functions, but before LiveWindow and
+   * SmartDashboard integrated updating.
+   */
+  @Override
+  public void robotPeriodic() {
+    // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
+    // commands, running already-scheduled commands, removing finished or interrupted commands,
+    // and running subsystem periodic() methods.  This must be called from the robot's periodic
+    // block in order for anything in the Command-based framework to work.
+    
+    CommandScheduler.getInstance().run();
+  }
+
+  /** This function is called once each time the robot enters Disabled mode. */
+  @Override
+  public void disabledInit() {}
+
+  @Override
+  public void disabledPeriodic() {}
+
+  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    m_timer.reset();
-    m_timer.start();
+    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+
+    // schedule the autonomous command (example)
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.schedule();
+    }
   }
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {
-    return;
-  }
+  public void autonomousPeriodic() {}
 
-  public void setLeds(int red, int green) {
-    for (var i = 0; i < ledBuffT.getLength()/2; i++) {
-      // Sets the specified LED to the RGB values for red
-      // ledBuff.setRGB(i, 255, 0, 0);
-      ledBuffT.setRGB(i, red, green, 0);
-      ledBuffT.setRGB(i+ledBuffT.getLength()/2, green,red, 0);
-    }
-   ledsT.setData(ledBuffT);
-  }
-
-  /**
-   * This function is called once each time the robot enters teleoperated mode.
-   */
   @Override
   public void teleopInit() {
-    // m_robotDrive.arcadeDrive(0.5, 0.0);
-    // Channel 1 is Left stick
-    stick.setXChannel(1);
-    // Channel 3 is RT
-    stick.setZChannel(3);
-    // Channel 5 is Rightstick
-    stick.setYChannel(5);
+    //Not calledfinal int LEFT_STICK_HORIZONTAL = 0;
+    final int LEFT_STICK_VERTICAL = 1;
+    //Not called final int RIGHT_STICK_HORIZONTAL = 4;
+    final int RIGHT_STICK_VERTICAL = 5;
 
-    // deprecated?
-    lcal = pct(stick.getX(), 0);
-    rcal = pct(stick.getY(), 0);
-
-    ledsT.setLength(ledBuffT.getLength());
-    ledsT.setData(ledBuffT);
-    ledsT.start();
-  }
-
-  public int pct(double raw, int cal) {
-    return (int) (raw * throttle * 1.0) - cal;
-  }
-
-  /*
-   * Convert the dpad POV input to either +1/0/-1.
-   */
-  public int povToDirection() {
-    int pov = stick.getPOV();
-    // this gives upish case from d-pad throttle input
-    if (pov > stickDirectlyLeft || (pov > -1 && pov < stickDirectlyRight)) {
-      return +1;
+    // This makes sure that the autonomous stops running when
+    // teleop starts running. If you want the autonomous to
+    // continue until interrupted by another command, remove
+    // this line or comment it out.
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
     }
-    // this gives downish case
-    if (pov > stickDirectlyRight && pov < stickDirectlyLeft) {
-      return -1;
-    }
-    return 0;
+
+    stick.setXChannel(LEFT_STICK_VERTICAL);
+    stick.setYChannel(RIGHT_STICK_VERTICAL);
+     
   }
 
-  /**
-   * This function is called periodically during teleoperated mode.
-   */
+  /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-   // basket.set(ControlMode.PercentOutput, (stick.getRawAxis(LEFT_TRIGGER) / 2) - (stick.getRawAxis(RIGHT_TRIGGER) / 2));
-
-    if (stick.getRawButtonPressed(1)) {
-      is_reverse = !is_reverse;
-      System.out.println("here");
-    }
-
-    horn.set(stick.getRawButton(2));
-
-    if (is_reverse == true) {
-      setLeds(255, 0);
-      cam.setString(reary.getName());
-      ltarget = -1 * pct(stick.getX(), 0);
-      rtarget = -1 * pct(stick.getY(), 0);
-    } else {
-      setLeds(0, 255);
-      cam.setString(fronty.getName());
-      ltarget = pct(stick.getX(), 0);
-      rtarget = pct(stick.getY(), 0);
-    }
-    System.out.printf("Left: %f, Right: %f\n", stick.getRawAxis(2), stick.getRawAxis(3));
-
-    int currentPov = povToDirection();
-    // dpad up increases throttle, dpad down decreases
-    if (currentPov != previousPov) {
-      if (currentPov == 0) {
-        previousPov = currentPov;
-      } else if (currentPov == +1) {
-        throttle = throttle + changeInThrottle;
-        if (throttle > maxValue) {
-          throttle = maxValue;
-        }
-        previousPov = currentPov;
-      } else if (currentPov == -1) {
-        throttle = throttle - changeInThrottle;
-        if (throttle < minValue) {
-          throttle = minValue;
-        }
-        previousPov = currentPov;
-      }
-      System.out.printf("throttle = %d\n", throttle);
-    }
-    //int ltarget = pct(stick.getX(), 0);
-   // int rtarget = pct(stick.getY(), 0);
-
-    // steps motor power to input
-    if (lout < ltarget) {
-      lout += throttleStep;
-      if (lout > ltarget) {
-        lout = ltarget;
-      }
-    } else if (lout > ltarget) {
-      lout -= throttleStep;
-      if (lout < ltarget) {
-        lout = ltarget;
-      }
-    }
-    if (rout < rtarget) {
-      rout += throttleStep;
-      if (rout > rtarget) {
-        rout = rtarget;
-      }
-    } else if (rout > rtarget) {
-      rout -= throttleStep;
-      if (rout < rtarget) {
-        rout = rtarget;
-      }
-    }
-
-    if (stick.getRawButton(3) && stick.getRawButton(4)) {
-      STOP = true;
-    }
-    if (currentPov != 0){
-      STOP = false;
-    }
-
-    if (STOP == true){
-      rout = 0;
-      lout = 0;
-    }
-    
-    // converts output to a decimal percent to prevent the motors from having only o
-    // and 100 power
-    lefty.set(ControlMode.PercentOutput, 1.0 * lout / 100.0);
-    righty.set(ControlMode.PercentOutput, 1.0 * rout / 100.0);
+    System.out.println("Hola allí.");
   }
-
-  /** This function is called once each time the robot enters test mode. */
   @Override
   public void testInit() {
+    // Cancels all running commands at the start of test mode.
+    CommandScheduler.getInstance().cancelAll();
   }
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {
-  }
+  public void testPeriodic() {}
+
+  /** This function is called once when the robot is first started up. */
+  @Override
+  public void simulationInit() {}
+
+  /** This function is called periodically whilst in simulation. */
+  @Override
+  public void simulationPeriodic() {}
 }
