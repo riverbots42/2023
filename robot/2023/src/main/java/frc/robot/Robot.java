@@ -7,6 +7,8 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
 //import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
@@ -19,12 +21,15 @@ import edu.wpi.first.wpilibj.Joystick;
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
+  private RobotContainer m_robotContainer;
+
   private final Joystick stick = new Joystick(0);
 
+  static final int LEFT_STICK_VERTICAL = 1;
+  static final int RIGHT_STICK_VERTICAL = 5;
+  
   VictorSPX leftMotorController = new VictorSPX(0);
   VictorSPX rightMotorController = new VictorSPX(1);
-
-  private RobotContainer m_robotContainer;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -79,29 +84,35 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    //Not calledfinal int LEFT_STICK_HORIZONTAL = 0;
-    final int LEFT_STICK_VERTICAL = 1;
-    //Not called final int RIGHT_STICK_HORIZONTAL = 4;
-    final int RIGHT_STICK_VERTICAL = 5;
-
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+
+    stick.setXChannel(this.LEFT_STICK_VERTICAL);
+    stick.setYChannel(this.RIGHT_STICK_VERTICAL);
+
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-
-    stick.setXChannel(LEFT_STICK_VERTICAL);
-    stick.setYChannel(RIGHT_STICK_VERTICAL);
-     
   }
 
   /** This function is called periodically during operator control. */
+
   @Override
   public void teleopPeriodic() {
-    System.out.println("Hola allí.");
+
+    double LJoystickOut = stick.getRawAxis(this.LEFT_STICK_VERTICAL);
+    double RJoystickOut = stick.getRawAxis(this.RIGHT_STICK_VERTICAL);
+    
+
+   // this.leftMotorController.set
+   // rightMotorController
+
+    /**  [value to be sent to the motor controller] * 1.0 (to convert to a double, regardless of any operation)
+    the / 100 to convert values of -100 to 100 into values between -1 to 1 becasue the motor controllers' "percent" is a scam*/
   }
+
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
@@ -110,9 +121,12 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+
+  }
 
   /** This function is called once when the robot is first started up. */
+
   @Override
   public void simulationInit() {}
 
