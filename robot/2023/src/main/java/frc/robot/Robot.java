@@ -31,10 +31,6 @@ public class Robot extends TimedRobot {
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
 
-  int leftMotorControlOutput = 0;
-  int rightMotorControlOutput = 0;
-  int throttle = 55;
-
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -97,8 +93,7 @@ public class Robot extends TimedRobot {
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
-    stick.setZChannel(RIGHT_TRIGGER);
-    // stick.setZChannel(LEFT_TRIGGER);
+    leftMotorController.setInverted(true);
 
     //leftMotorControlOutput.Set(VictorSPXControlMode::PercentOutput, 0.5);
     //leftMotorControlOutput.set(VictorSPX.PercentOutput, (stick.getRawAxis(2) / 2) - (stick.getRawAxis(3) / 2));
@@ -115,10 +110,8 @@ public class Robot extends TimedRobot {
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.2;
 
     leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
-    leftMotorController.setInverted(true);
     rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
- //  ScrewDriveMotorController.set(VictorSPXControlMode.PercentOutput, ScrewDriveOutput));
   }
 
   @Override
