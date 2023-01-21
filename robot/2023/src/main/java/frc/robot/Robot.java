@@ -23,7 +23,7 @@ public class Robot extends TimedRobot {
 
   VictorSPX leftMotorController = new VictorSPX(0);
   VictorSPX rightMotorController = new VictorSPX(1);
-
+  VictorSPX ScrewDriveMotorController = new VictorSPX(2);
   private RobotContainer m_robotContainer;
 
   /**
@@ -83,7 +83,8 @@ public class Robot extends TimedRobot {
     final int LEFT_STICK_VERTICAL = 1;
     //Not called final int RIGHT_STICK_HORIZONTAL = 4;
     final int RIGHT_STICK_VERTICAL = 5;
-
+    final int LEFT_TRIGGER = 2;
+    final int RIGHT_TRIGGER = 3;
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
@@ -94,13 +95,17 @@ public class Robot extends TimedRobot {
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
+    stick.setOutputs(RIGHT_TRIGGER);
+    stick.setOutputs(LEFT_TRIGGER);
      
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+
   }
+
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
