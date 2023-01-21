@@ -25,12 +25,12 @@ public class Robot extends TimedRobot {
   VictorSPX rightMotorController = new VictorSPX(1);
   VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
-
+  
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
-  
+
   int leftMotorControlOutput = 0;
   int rightMotorControlOutput = 0;
   int throttle = 55;
@@ -97,8 +97,8 @@ public class Robot extends TimedRobot {
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
-    stick.setOutputs(RIGHT_TRIGGER);
-    stick.setOutputs(LEFT_TRIGGER);
+    stick.setZChannel(RIGHT_TRIGGER);
+    // stick.setZChannel(LEFT_TRIGGER);
 
     //leftMotorControlOutput.Set(VictorSPXControlMode::PercentOutput, 0.5);
     //leftMotorControlOutput.set(VictorSPX.PercentOutput, (stick.getRawAxis(2) / 2) - (stick.getRawAxis(3) / 2));
@@ -110,9 +110,14 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
- //   ScrewDriveOutput = stick.getRawAxis(RIGHT_TRIGGER)
+
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.2;
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.2;
+
     leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    leftMotorController.setInverted(true);
     rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
  //  ScrewDriveMotorController.set(VictorSPXControlMode.PercentOutput, ScrewDriveOutput));
   }
 
