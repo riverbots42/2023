@@ -7,7 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
 
@@ -21,10 +21,19 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
   private final Joystick stick = new Joystick(0);
 
-  VictorSPX leftMotorController = new VictorSPX(0);
+  VictorSPX leftMotorController = new VictorSPX(2);
   VictorSPX rightMotorController = new VictorSPX(1);
-  VictorSPX ScrewDriveMotorController = new VictorSPX(2);
+  VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
+
+  final int LEFT_STICK_VERTICAL = 1;
+  final int RIGHT_STICK_VERTICAL = 5;
+  final int LEFT_TRIGGER = 2;
+  final int RIGHT_TRIGGER = 3;
+  
+  int leftMotorControlOutput = 0;
+  int rightMotorControlOutput = 0;
+  int throttle = 55;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -35,7 +44,6 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
-    System.out.println("I have assumed control of the Riverbot code base.");
   }
 
   /**
@@ -79,12 +87,6 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-    //Not calledfinal int LEFT_STICK_HORIZONTAL = 0;
-    final int LEFT_STICK_VERTICAL = 1;
-    //Not called final int RIGHT_STICK_HORIZONTAL = 4;
-    final int RIGHT_STICK_VERTICAL = 5;
-    final int LEFT_TRIGGER = 2;
-    final int RIGHT_TRIGGER = 3;
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
@@ -97,13 +99,21 @@ public class Robot extends TimedRobot {
     stick.setYChannel(RIGHT_STICK_VERTICAL);
     stick.setOutputs(RIGHT_TRIGGER);
     stick.setOutputs(LEFT_TRIGGER);
-     
+
+    //leftMotorControlOutput.Set(VictorSPXControlMode::PercentOutput, 0.5);
+    //leftMotorControlOutput.set(VictorSPX.PercentOutput, (stick.getRawAxis(2) / 2) - (stick.getRawAxis(3) / 2));
+   /*  public int pct(double raw, int cal) {
+      return (int) (raw * throttle * 1.0);
+    }*/
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-
+ //   ScrewDriveOutput = stick.getRawAxis(RIGHT_TRIGGER)
+    leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+ //  ScrewDriveMotorController.set(VictorSPXControlMode.PercentOutput, ScrewDriveOutput));
   }
 
   @Override
