@@ -5,6 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.I2C.Port;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
@@ -19,12 +21,17 @@ import edu.wpi.first.wpilibj.Joystick;
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
+
   private final Joystick stick = new Joystick(0);
 
   VictorSPX leftMotorController = new VictorSPX(2);
   VictorSPX rightMotorController = new VictorSPX(1);
   VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
+
+  static final Port onBoard = Port.kOnboard;
+  static final int gyroAdress = 0x68;
+  I2C gyro;
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
@@ -95,11 +102,9 @@ public class Robot extends TimedRobot {
     stick.setYChannel(RIGHT_STICK_VERTICAL);
     leftMotorController.setInverted(true);
 
-    //leftMotorControlOutput.Set(VictorSPXControlMode::PercentOutput, 0.5);
-    //leftMotorControlOutput.set(VictorSPX.PercentOutput, (stick.getRawAxis(2) / 2) - (stick.getRawAxis(3) / 2));
-   /*  public int pct(double raw, int cal) {
-      return (int) (raw * throttle * 1.0);
-    }*/
+    gyro = new I2C(onBoard, gyroAdress);
+    gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
+    gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
   }
 
   /** This function is called periodically during operator control. */
@@ -112,6 +117,8 @@ public class Robot extends TimedRobot {
     leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
+
+    
   }
 
   @Override
