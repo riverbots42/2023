@@ -111,8 +111,8 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.2;
-    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.2;
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.4;
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.4;
 
     leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
