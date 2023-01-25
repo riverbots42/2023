@@ -5,10 +5,13 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.I2C.Port;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import edu.wpi.first.wpilibj.Joystick;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -19,7 +22,21 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
+  private final Joystick stick = new Joystick(0);
+
+  VictorSPX leftMotorController = new VictorSPX(2);
+  VictorSPX rightMotorController = new VictorSPX(1);
+  VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
+
+  static final Port onBoard = Port.kOnboard;
+  static final int gyroAdress = 0x68;
+  I2C gyro;
+  
+  final int LEFT_STICK_VERTICAL = 1;
+  final int RIGHT_STICK_VERTICAL = 5;
+  final int LEFT_TRIGGER = 2;
+  final int RIGHT_TRIGGER = 3;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -30,7 +47,6 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
-    System.out.println("I have assumed control of the Riverbot code base.");
   }
 
   /**
@@ -46,6 +62,7 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
+    
     CommandScheduler.getInstance().run();
   }
 
@@ -80,13 +97,30 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+
+    stick.setXChannel(LEFT_STICK_VERTICAL);
+    stick.setYChannel(RIGHT_STICK_VERTICAL);
+    leftMotorController.setInverted(true);
+
+    gyro = new I2C(onBoard, gyroAdress);
+    gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
+    gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    System.out.println("Hola allí.");
+
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.4;
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.4;
+
+    leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
+
+    
   }
+
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
