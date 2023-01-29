@@ -5,13 +5,25 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.interfaces.Accelerometer;
+import edu.wpi.first.wpilibj.BuiltInAccelerometer;
+
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
+
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -32,11 +44,15 @@ public class Robot extends TimedRobot {
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
+  Accelerometer accelerometer = new BuiltInAccelerometer();
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
+
+  UsbCamera parkingCamera;
+  NetworkTableEntry camera;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -47,6 +63,9 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+
+    camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
+    parkingCamera = CameraServer.startAutomaticCapture(0);
   }
 
   /**
@@ -64,6 +83,7 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     
     CommandScheduler.getInstance().run();
+    
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -111,16 +131,18 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.4;
-    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.4;
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.8;
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.8;
 
     leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
-
     
+    System.out.println(accelerometer.getX());
+    System.out.println(accelerometer.getY());
+    System.out.println(accelerometer.getZ());
   }
-
+ 
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
