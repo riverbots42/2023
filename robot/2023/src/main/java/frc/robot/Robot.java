@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
-//import edu.wpi.first.wpilibj.IterativeRobot;
 
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -21,10 +20,6 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
 
 import edu.wpi.first.cameraserver.CameraServer;
-//These don't work yet and I don't know if they'll need to
-/*import edu.wpi.cscore.CvSink;
-import edu.wpi.cscore.CvSource;
-import edu.wpi.cscore.MjpegServer;*/
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
