@@ -1,0 +1,36 @@
+# Configuration for the loopback interface (internal on 127.0.0.1)
+auto lo
+iface lo inet loopback
+
+# Configuration for the WAN interface, which is Internet-facing
+auto wan
+iface wan inet dhcp
+
+# Configuration for the LAN interface, which is NOT Internet-facing
+auto lan
+iface lan inet static
+	address 10.68.1.1
+	netmask 255.255.255.0
+	up sysctl -w net.ipv4.ip_forward=1
+	up iptables -t nat -F POSTROUTING
+	up iptables -t nat -A POSTROUTING -o wan -j MASQUERADE
+
+auto wifi
+iface wifi inet manual
+	up iw dev wifi interface add wifi_ap type managed
+	up ip link set wifi_ap address 00:07:ef:be:ef:fd
+	up iw dev wifi interface add wifi_sta type managed
+	up ip link set wifi_sta address 00:07:ef:be:ef:fe
+
+auto wifi_ap
+iface wifi_ap inet static
+	address 10.68.2.1
+	netmask 255.255.255.0
+
+auto wifi_sta
+iface wifi_sta inet static
+	address 10.68.45.3
+	netmask 255.255.255.0
+	up ip link set wifi_sta up
+	up iw dev wifi_sta connect 6845_Criselda
+	up iptables -t nat -A POSTROUTING -o wifi_sta -j MASQUERADE

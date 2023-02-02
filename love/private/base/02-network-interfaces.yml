@@ -1,0 +1,36 @@
+---
+- name: Configure network interfaces with correct names and WAN MAC.
+  hosts: all
+  become: true
+  tasks:
+  - name: Copy over the network interface autoconfig script.
+    ansible.builtin.copy:
+      src: generate-udev-rules.py
+      dest: /usr/local/bin/generate-udev-rules
+      mode: 0755
+  - name: Run the network interface autoconfig script.
+    shell: /usr/local/bin/generate-udev-rules
+  - name: Copy in the network address config file.
+    ansible.builtin.copy:
+      src: interfaces
+      dest: /etc/network/interfaces
+  - name: Copy in the AP config file.
+    ansible.builtin.template:
+      src: hostapd.conf
+      dest: /etc/hostapd/hostapd.conf
+  - name: Enable the hostapd daemon.
+    ansible.builtin.systemd:
+      name: hostapd.service
+      enabled: true
+      masked: false
+      state: restarted
+  - name: Copy in the DHCP config file.
+    ansible.builtin.copy:
+      src: dnsmasq.conf
+      dest: /etc/dnsmasq.d/dnsmasq.conf
+  - name: Enable the DHCP daemon.
+    ansible.builtin.systemd:
+      name: dnsmasq.service
+      enabled: true
+      masked: false
+      state: restarted

@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Create the VPN configuration.
+    ansible.builtin.template:
+      src: wg0.conf
+      dest: /etc/wireguard/wg0.conf
+  - name: Enable the VPN interface.
+    ansible.builtin.systemd:
+      name: wg-quick@wg0.service
+      enabled: true
+      masked: false
+      state: restarted

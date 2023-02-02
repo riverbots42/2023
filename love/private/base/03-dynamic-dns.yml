@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Create the dynamic DNS configuration.
+    ansible.builtin.template:
+      src: ddclient.conf
+      dest: /etc/ddclient.conf
+  - name: Enable the ddclient daemon.
+    ansible.builtin.systemd:
+      name: ddclient.service
+      enabled: true
+      masked: false
+      state: restarted
