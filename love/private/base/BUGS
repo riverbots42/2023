@@ -1,1 +1,9 @@
-Need to remove 'lab.riverbots.org' from /etc/hosts (new playbook, presumably).
+Current:
+
+* Need to add the printer code.
+
+Resolved:
+
+* Need to remove and rekey keys.json because they were accidentally checked
+  into git.
+* Need to remove 'lab.riverbots.org' from /etc/hosts (new playbook, presumably).
