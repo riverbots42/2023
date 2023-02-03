@@ -1,3 +1,11 @@
+#
+# {{ ansible_warning }}
+#
+# This configuration file sets up all the IP addresses and NAT and forwarding
+# translations.  Basically it sets up the core of the network at layer 3 (i.e.
+# IP addresses and internet-related stuff).
+#
+
 # Configuration for the loopback interface (internal on 127.0.0.1)
 auto lo
 iface lo inet loopback

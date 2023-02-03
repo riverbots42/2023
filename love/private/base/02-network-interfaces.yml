@@ -1,3 +1,8 @@
+#
+# The most-complex of the ansible playbooks, we set up all the interface names
+# and configure the IP addresses here, along with setting up the wifi AP and
+# configure the DHCP daemon to hand out IP addresses on our networks.
+#
 ---
 - name: Configure network interfaces with correct names and WAN MAC.
   hosts: all
@@ -11,7 +16,7 @@
   - name: Run the network interface autoconfig script.
     shell: /usr/local/bin/generate-udev-rules
   - name: Copy in the network address config file.
-    ansible.builtin.copy:
+    ansible.builtin.template:
       src: interfaces
       dest: /etc/network/interfaces
   - name: Copy in the AP config file.
@@ -25,7 +30,7 @@
       masked: false
       state: restarted
   - name: Copy in the DHCP config file.
-    ansible.builtin.copy:
+    ansible.builtin.template:
       src: dnsmasq.conf
       dest: /etc/dnsmasq.d/dnsmasq.conf
   - name: Enable the DHCP daemon.

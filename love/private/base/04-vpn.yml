@@ -1,3 +1,7 @@
+#
+# This playbook sets up the VPN to simulator.riverbots.org, so we can access
+# the lab remotely.
+#
 ---
 - hosts: all
   become: true

@@ -1,3 +1,7 @@
+#
+# This playbook configures ddclient, which tells Google domains to redirect
+# lab.riverbots.org to whatever IP address DHCP gave us.
+#
 ---
 - hosts: all
   become: true

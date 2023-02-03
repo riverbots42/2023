@@ -1,3 +1,7 @@
+#
+# The very first Ansible playbook run, this one just installs the packages we
+# know we'll need later.
+#
 ---
 - hosts: all
   become: true
