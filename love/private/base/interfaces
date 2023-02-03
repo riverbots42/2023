@@ -32,5 +32,5 @@ iface wifi_sta inet static
 	address 10.68.45.3
 	netmask 255.255.255.0
 	up ip link set wifi_sta up
-	up iw dev wifi_sta connect 6845_Criselda
+	up iw dev wifi_sta connect 6845_Lovekesh
 	up iptables -t nat -A POSTROUTING -o wifi_sta -j MASQUERADE
