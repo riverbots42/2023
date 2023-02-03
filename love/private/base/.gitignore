@@ -1,1 +1,2 @@
-keys.sh
+# The file patterns below are NOT added to git by default.
+keys.json
