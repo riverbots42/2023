@@ -1,15 +1,10 @@
 PLAYBOOKS := $(sort $(wildcard *.yml))
 
-push:
-	$(MAKE) docker
-	docker login
-	docker push riverbots42/riverbots-love
-
 docker:
 	$(MAKE) love.properties
-	docker build -t riverbots42/love:current .
+	docker build -t riverbots42/love:latest .
 	docker login
-	docker push riverbots42/love:current
+	docker push riverbots42/love:latest
 
 love.properties:	love.properties.enc
 	echo Decrypting $<...
