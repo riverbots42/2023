@@ -1,0 +1,98 @@
+body {
+    margin: 0;
+    background: black;
+}
+
+#outerbox {
+	display: block;
+	background-color: black;
+	width: 100%;
+	height: 100%;
+	background-image: url("love.jpg");
+	background-attachment: fixed;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.termbox {
+	display: block;
+	position: absolute;
+	bottom: 10px;
+	width: 100%;
+	padding: 5px;
+	color: #c0ffc0;
+	font-family: monospace;
+	font-size: calc(1.5 * (1.1vh + 1.5vw));
+}
+
+#content {
+	background: black;
+	background-color: black;
+  	background-image: radial-gradient(
+	    rgba(0, 100, 0, 0.75), black 120%
+	);
+}
+
+#fuzzer {
+	background-image: url("scanline.png");
+	background-size: 3px;
+}
+
+#player {
+	position: fixed;
+	right: 0px;
+	top: 0px;
+}
+
+#coverbox {
+	text-align: center;
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+}
+
+p {
+	margin-block-start: 0;
+	margin-block-end: 0;
+	padding: 0px;
+}
+
+form {
+	margin: 0px;
+	padding: 0px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+#landing {
+	position: fixed;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	bottom: 0px;
+}
+
+input {
+	background: transparent;
+	border: thin solid #c0ffc0;
+	color: #c0ffc0;
+	font-family: monospace;
+	font-size: calc(1.5 * (1.1vh + 1.5vw));
+}
+
+button {
+	background: transparent;
+	border: thin solid #c0ffc0;
+	border-radius: 10px;
+	color: #c0ffc0;
+	font-family: monospace;
+	font-size: calc(1.5 * (1.1vh + 1.5vw));
+}
+
+.red {
+	color: #ffc0c0;
+}
