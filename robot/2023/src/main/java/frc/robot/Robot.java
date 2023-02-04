@@ -5,7 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
@@ -125,6 +125,7 @@ public class Robot extends TimedRobot {
     gyro = new I2C(onBoard, gyroAdress);
     gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
     gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
+    System.out.println("debug plz");
   }
 
   /** This function is called periodically during operator control. */
@@ -138,9 +139,23 @@ public class Robot extends TimedRobot {
     rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
     
-    System.out.println(accelerometer.getX());
-    System.out.println(accelerometer.getY());
-    System.out.println(accelerometer.getZ());
+    //Updates console whenever a value in accelerometer changes, though it's still too fast
+    //and should probably be replaced with a timer
+    double previousXAccelerometer = accelerometer.getX();
+    double previousYAccelerometer = accelerometer.getY();
+    double previousZAccelerometer = accelerometer.getZ();
+    if(accelerometer.getX() != previousXAccelerometer)
+    {
+      System.out.println(accelerometer.getX());
+    }
+    if(accelerometer.getY() != previousYAccelerometer)
+    {
+      System.out.println(accelerometer.getY());
+    }
+    if(accelerometer.getZ() != previousZAccelerometer)
+    {
+      System.out.println(accelerometer.getZ());
+    }
   }
  
   @Override
