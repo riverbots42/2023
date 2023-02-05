@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
+import com.revrobotics.CANSparkMax;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
@@ -35,9 +36,12 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final Joystick stick = new Joystick(0);
-
-  VictorSPX leftMotorController = new VictorSPX(2);
-  VictorSPX rightMotorController = new VictorSPX(1);
+  //Still need tested to see which motor controllers are which
+  VictorSPX leftMotorControllerOne = new VictorSPX(5);
+  VictorSPX leftMotorControllerTwo = new VictorSPX(6);
+  VictorSPX rightMotorControllerOne = new VictorSPX(7);
+  VictorSPX rightMotorControllerTwo = new VictorSPX(8);
+  //Screw drive will no longer be a VictorSPX, shift to new Talon
   VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
 
@@ -47,7 +51,7 @@ public class Robot extends TimedRobot {
   Accelerometer accelerometer = new BuiltInAccelerometer();
   
   final int LEFT_STICK_VERTICAL = 1;
-  final int RIGHT_STICK_VERTICAL = 5;
+  final int RIGHT_STICK_VERTICAL = 3;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
 
@@ -120,7 +124,8 @@ public class Robot extends TimedRobot {
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
-    leftMotorController.setInverted(true);
+    leftMotorControllerOne.setInverted(true);
+    leftMotorControllerTwo.setInverted(true);
 
     gyro = new I2C(onBoard, gyroAdress);
     gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
@@ -135,8 +140,10 @@ public class Robot extends TimedRobot {
     double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.8;
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.8;
 
-    leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
-    rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
     
     //Updates console whenever a value in accelerometer changes, though it's still too fast
@@ -157,7 +164,7 @@ public class Robot extends TimedRobot {
       System.out.println(accelerometer.getZ());
     }
   }
- 
+  
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
