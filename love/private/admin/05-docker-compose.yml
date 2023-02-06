@@ -1,0 +1,33 @@
+#
+# This playbook sets up docker-compose to start the admin web UI
+# automatically.
+#
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Make sure the compose directory is created.
+    ansible.builtin.file:
+      path: /etc/docker/compose
+      mode: 0755
+      state: directory
+  - name: Make sure the compose/web directory is created.
+    ansible.builtin.file:
+      path: /etc/docker/compose/web
+      mode: 0755
+      state: directory
+  - name: Copy in the docker-compose.yml file.
+    ansible.builtin.copy:
+      src: docker-compose.yml
+      dest: /etc/docker/compose/web/docker-compose.yml
+  - name: Copy in the docker-compose config for systemd so we can start the service.
+    ansible.builtin.copy:
+      src: docker-compose@.service
+      dest: /lib/systemd/system/docker-compose@.service
+  - name: Enable the admin web UI.
+    ansible.builtin.systemd:
+      daemon-reload: true
+      name: docker-compose@web.service
+      enabled: true
+      masked: false
+      state: restarted

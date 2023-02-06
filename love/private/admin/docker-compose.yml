@@ -1,0 +1,11 @@
+# This file is the docker-compose configuration for the admin web UI.
+
+version: "3.3"
+services:
+  web:
+    image: "riverbots42/love"
+    ports:
+      - "8080:8080"
+    volumes:
+      - /dev:/dev
+    privileged: true

@@ -1,4 +1,8 @@
-PLAYBOOKS := $(sort $(wildcard *.yml))
+PLAYBOOKS := $(sort $(filter-out docker-compose.yml, $(wildcard *.yml)))
+
+push:	$(PLAYBOOKS)
+	$(MAKE) docker
+	ansible-playbook --ask-become-pass -i ../base/inventory $(PLAYBOOKS)
 
 docker:
 	$(MAKE) love.properties
