@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -41,6 +43,9 @@ public class Robot extends TimedRobot {
   VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
 
+  AddressableLED leds = new AddressableLED(0);
+  AddressableLEDBuffer ledBuff = new AddressableLEDBuffer(30);
+
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
@@ -50,7 +55,7 @@ public class Robot extends TimedRobot {
   final int RIGHT_STICK_VERTICAL = 5;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
-
+  
   UsbCamera parkingCamera;
   NetworkTableEntry camera;
 
@@ -106,8 +111,16 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    for(int count = 0; count < 1; count += 0.1){
+      leftMotorController.set(VictorSPXControlMode.PercentOutput, count);
+      rightMotorController.set(VictorSPXControlMode.PercentOutput,-1 * count);
+    }
+    leftMotorController.set(VictorSPXControlMode.PercentOutput, 0);
+    rightMotorController.set(VictorSPXControlMode.PercentOutput,0);
 
+  }
+  
   @Override
   public void teleopInit() {
     // This makes sure that the autonomous stops running when
