@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 
 
@@ -19,6 +20,7 @@ import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
@@ -36,13 +38,12 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final Joystick stick = new Joystick(0);
-  //Still need tested to see which motor controllers are which
   VictorSPX leftMotorControllerOne = new VictorSPX(5);
   VictorSPX leftMotorControllerTwo = new VictorSPX(6);
   VictorSPX rightMotorControllerOne = new VictorSPX(7);
   VictorSPX rightMotorControllerTwo = new VictorSPX(8);
-  //Screw drive will no longer be a VictorSPX, shift to new Talon
-  VictorSPX screwDriveMotorController = new VictorSPX(3);
+  Spark sparkScrewDriveMotorController = new Spark(1);
+
   private RobotContainer m_robotContainer;
 
   static final Port onBoard = Port.kOnboard;
@@ -70,6 +71,7 @@ public class Robot extends TimedRobot {
 
     camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
     parkingCamera = CameraServer.startAutomaticCapture(0);
+
   }
 
   /**
@@ -144,7 +146,7 @@ public class Robot extends TimedRobot {
     leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
-    screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
+    sparkScrewDriveMotorController.set(RightTriggerOut - LeftTriggerOut);
     
     //Updates console whenever a value in accelerometer changes, though it's still too fast
     //and should probably be replaced with a timer
