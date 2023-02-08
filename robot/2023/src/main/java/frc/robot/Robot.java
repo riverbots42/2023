@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import java.util.Random;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -55,7 +56,7 @@ public class Robot extends TimedRobot {
   final int RIGHT_STICK_VERTICAL = 5;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
-  
+
   UsbCamera parkingCamera;
   NetworkTableEntry camera;
 
@@ -118,9 +119,28 @@ public class Robot extends TimedRobot {
     }
     leftMotorController.set(VictorSPXControlMode.PercentOutput, 0);
     rightMotorController.set(VictorSPXControlMode.PercentOutput,0);
-
+	randomRGB();
+	leds.setData(ledBuff);
+	
   }
-  
+  public void randomRGB(){
+	int choice = (int)(Math.random()*3);
+	if(choice == 0){
+		for(int i = 0; i < ledBuff.getLength(); i++){
+			ledBuff.setRGB(i,255,0,0);
+		}
+	}
+	if(choice == 1){
+		for(int i = 0; i < ledBuff.getLength(); i++){
+			ledBuff.setRGB(i,0,255,0);
+		}
+	}
+	else{
+		for(int i = 0; i < ledBuff.getLength(); i++){
+			ledBuff.setRGB(i,0,0,255);
+		}
+	}
+  }
   @Override
   public void teleopInit() {
     // This makes sure that the autonomous stops running when
