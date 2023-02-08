@@ -50,9 +50,10 @@ public class Robot extends TimedRobot {
   static final int gyroAdress = 0x68;
   I2C gyro;
   Accelerometer accelerometer = new BuiltInAccelerometer();
-  
+  //These constants set channels for the controller.  On the back of the Logitech controller we use,
+  //there is a switch.  Ensure the switch it set to "X" rather than "D" or the channels will be wrong
   final int LEFT_STICK_VERTICAL = 1;
-  final int RIGHT_STICK_VERTICAL = 3;
+  final int RIGHT_STICK_VERTICAL = 5;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
 
@@ -147,6 +148,14 @@ public class Robot extends TimedRobot {
     rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     sparkScrewDriveMotorController.set(RightTriggerOut - LeftTriggerOut);
+    if(RightTriggerOut > .01)
+    {
+      System.out.println("RIGHT trigger works");
+    }
+    if(LeftTriggerOut > .01)
+    {
+      System.out.println("Left trigger works");
+    }
     
     //Updates console whenever a value in accelerometer changes, though it's still too fast
     //and should probably be replaced with a timer
