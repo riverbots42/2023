@@ -42,7 +42,7 @@ public class Robot extends TimedRobot {
   VictorSPX leftMotorControllerTwo = new VictorSPX(6);
   VictorSPX rightMotorControllerOne = new VictorSPX(7);
   VictorSPX rightMotorControllerTwo = new VictorSPX(8);
-  Spark sparkScrewDriveMotorController = new Spark(1);
+  Spark sparkScoringMechanismMotor = new Spark(1);
 
   private RobotContainer m_robotContainer;
 
@@ -147,7 +147,7 @@ public class Robot extends TimedRobot {
     leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
-    sparkScrewDriveMotorController.set(RightTriggerOut - LeftTriggerOut);
+    sparkScoringMechanismMotor.set(RightTriggerOut - LeftTriggerOut);
     if(RightTriggerOut > .01)
     {
       System.out.println("RIGHT trigger works");
