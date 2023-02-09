@@ -3,15 +3,15 @@ GID := $(shell id -g)
 
 zebra-printer.jar:	$(wildcard *.java) pom.xml Dockerfile
 	$(MAKE) docker
-	docker run -v `pwd`:/dst -it zebra-printer cp /$@ /dst/$@
-	docker run -v `pwd`:/dst -it zebra-printer chown $(UID):$(GID) /dst/$@
+	docker run -v `pwd`:/dst -it riverbots42/zebra cp /$@ /dst/$@
+	docker run -v `pwd`:/dst -it riverbots42/zebra chown $(UID):$(GID) /dst/$@
 
 pretty:	$(wildcard *.java)
 	for i in $^; do astyle $$i; done
 
 test:
 	$(MAKE) docker
-	docker run -p 8080:8080 -it zebra-printer
+	docker run -p 8080:8080 -it riverbots42/zebra:latest
 
 docker:
 	docker build -t riverbots42/zebra:latest .

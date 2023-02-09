@@ -69,22 +69,26 @@ public class Main implements Callable<Integer>, HttpHandler {
                             zpl = new ZPL(img);
                         } catch(IOException e) {
                             exchange.setResponseCode(500);
-                            exchange.getResponseSender().send("Couldn't open file!");
+                            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                            exchange.getResponseSender().send("{\n  \"status\": \"Error\",\n  \"Message\": \"Couldn't open file!\"\n}");
                             return;
                         }
                         try {
-                            BufferedWriter writer = new BufferedWriter(new FileWriter("/dev/usb/lp0"));
+                            BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/dump.zpl"));
+                            writer.write(zpl.toString());
+                            writer.close();
+                            writer = new BufferedWriter(new FileWriter("/dev/usb/lp0"));
                             writer.write(zpl.toString());
                             writer.close();
                         } catch(IOException e) {
                             exchange.setResponseCode(500);
-                            exchange.getResponseSender().send("Couldn't send ZPL to printer!");
+                            exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                            exchange.getResponseSender().send("{\n  \"status\": \"Error\",\n  \"Message\": \"Couldn't send ZPL to printer!\"\n}");
                             return;
                         }
-                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-			JSONObject ret = new JSONObject();
-			ret.put("status", "OK");
-			ret.put("zpl", zpl.toString());
+                        JSONObject ret = new JSONObject();
+                        ret.put("status", "OK");
+                        ret.put("zpl", zpl.toString());
                         exchange.getResponseSender().send(ret.toJSONString());
                         uploadedFile.delete();
                     }

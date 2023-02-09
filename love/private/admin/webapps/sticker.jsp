@@ -8,6 +8,7 @@
 <%@ page import="javax.imageio.*" %>
 <%@ page import="com.google.zxing.*" %>
 <%@ page import="com.google.zxing.common.*" %>
+<%@ page import="org.apache.hc.client5.http.fluent.*" %>
 <%!
 // BEGIN SHARED FUNCTION DEFININTIONS
 // END SHARED FUNCTION DEFINITIONS.
@@ -56,6 +57,7 @@ if(password == "" || !props.getProperty("password").equals(password)) {
 Class.forName("com.mysql.jdbc.Driver");
 Connection conn = DriverManager.getConnection("jdbc:mysql://10.68.0.1:3306/love", "love", props.getProperty("password"));
 
+String toPrinter = request.getParameter("toprinter");
 String code = request.getParameter("code");
 if( code == null || code.equals("") ) {
     response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -85,6 +87,16 @@ for(int row=0; row<qr.getHeight(); row++) {
             gc.fillRect(QR_X+col, QR_Y+row, 1, 1);
         }
     }
+}
+if( toPrinter != null && toPrinter.equals("yes") ) {
+    ByteArrayOutputStream lbl = new ByteArrayOutputStream();
+    ImageIO.write(image, "png", lbl);
+    byte[] res = Request.post("http://web_printer_1:8080")
+                 .bodyForm(Form.form().add("lbl", lbl.toString()).build())
+                 .execute().returnContent().asBytes();
+    response.setContentType("application/json");
+    response.getOutputStream().write(res);
+    return;
 }
 ImageIO.write(image, "png", response.getOutputStream());
 

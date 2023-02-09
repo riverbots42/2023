@@ -468,7 +468,8 @@ while(result.next()) {
                 <td>
                     <a href="index.jsp?code=<%=code%>&action=edit"><img src="edit.png" alt="[Edit]" /></a>
                     <a href="index.jsp?code=<%=code%>&delete=ask"><img src="delete.png" alt="[Delete]" /></a>
-                    <a href="sticker.jsp?code=<%=code%>"><img src="print.png" alt="[Print]" /></a>
+                    <a href="sticker.jsp?code=<%=code%>"><img src="print.png" alt="[Show Sticker]" /></a>
+                    <a href="sticker.jsp?code=<%=code%>&toprinter=yes" target="_blank"><img src="print2.png" alt="[Print]" /></a>
                 </td>
             </tr>
 <%
