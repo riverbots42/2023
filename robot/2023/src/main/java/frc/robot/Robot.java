@@ -7,7 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
-import edu.wpi.first.wpilibj.XboxController.Button;
+
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -20,8 +20,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
@@ -44,7 +42,7 @@ public class Robot extends TimedRobot {
   VictorSPX rightMotorControllerOne = new VictorSPX(7);
   VictorSPX rightMotorControllerTwo = new VictorSPX(8);
   Spark sparkScoringMechanismMotor = new Spark(1);
-  Spark ScrewDriveMotor = new Spark(2);
+  Spark screwDriveMotor = new Spark(2);
 
   private RobotContainer m_robotContainer;
 
@@ -152,8 +150,8 @@ public class Robot extends TimedRobot {
     leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
-    sparkScoringMechanismMotor.set(RightBumperOut - LeftBumperOut);
-    ScrewDriveMotor.set(RightTriggerOut - LeftTriggerOut);
+    sparkScoringMechanismMotor.set(RightTriggerOut - LeftTriggerOut);
+    screwDriveMotor.set(RightBumperOut - LeftBumperOut);
     //and should probably be replaced with a timer-
     double previousXAccelerometer = accelerometer.getX();
     double previousYAccelerometer = accelerometer.getY();
