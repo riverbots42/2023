@@ -1,8 +1,9 @@
 FROM maven as build
-RUN mkdir -p /maven/src/main/java/org/riverbots/zebra
+RUN mkdir -p /maven/src/main/java/org/riverbots/zebra /maven/src/main/resources/
 ADD pom.xml /maven
 RUN cd /maven && mvn dependency:resolve-plugins dependency:resolve clean package
 ADD *.java /maven/src/main/java/org/riverbots/zebra/
+ADD *.html /maven/src/main/resources/
 RUN cd /maven && mvn clean package && cp target/printer-1.0-jar-with-dependencies.jar zebra-printer.jar
 RUN jar -tf /maven/target/printer-1.0.jar
 

@@ -9,6 +9,7 @@ package org.riverbots.zebra;
 import java.awt.image.*;
 import java.io.*;
 import java.nio.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import javax.imageio.*;
@@ -17,6 +18,7 @@ import io.undertow.Undertow.*;
 import io.undertow.server.*;
 import io.undertow.server.handlers.form.*;
 import io.undertow.util.*;
+import org.json.simple.*;
 import org.xnio.channels.*;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -34,7 +36,20 @@ public class Main implements Callable<Integer>, HttpHandler {
     Undertow server;
 
     public String getForm() {
-        return "Hello!";
+        StringBuilder ret = new StringBuilder();
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("index.html")));
+            String line;
+            do {
+                line = reader.readLine();
+                if(line != null) {
+                    ret.append(line + "\n");
+                }
+            } while( line != null );
+        } catch(IOException e) {
+            return "Couldn't load index.html";
+        }
+        return ret.toString();
     }
 
     private class PostHandler implements HttpHandler {
@@ -48,16 +63,29 @@ public class Main implements Callable<Integer>, HttpHandler {
                     if (formValue.isFileItem()) {
                         // Process file here
                         File uploadedFile = formValue.getFileItem().getFile().toFile();
-                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+                        ZPL zpl;
                         try {
                             BufferedImage img = ImageIO.read(uploadedFile);
-                            ZPL zpl = new ZPL(img);
-                            exchange.getResponseSender().send(zpl.toString());
+                            zpl = new ZPL(img);
                         } catch(IOException e) {
                             exchange.setResponseCode(500);
                             exchange.getResponseSender().send("Couldn't open file!");
                             return;
                         }
+                        try {
+                            BufferedWriter writer = new BufferedWriter(new FileWriter("/dev/usb/lp0"));
+                            writer.write(zpl.toString());
+                            writer.close();
+                        } catch(IOException e) {
+                            exchange.setResponseCode(500);
+                            exchange.getResponseSender().send("Couldn't send ZPL to printer!");
+                            return;
+                        }
+                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+			JSONObject ret = new JSONObject();
+			ret.put("status", "OK");
+			ret.put("zpl", zpl.toString());
+                        exchange.getResponseSender().send(ret.toJSONString());
                         uploadedFile.delete();
                     }
                 }
