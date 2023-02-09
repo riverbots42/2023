@@ -95,10 +95,11 @@ public String form(String name, String buttontext, String fields[]) {
  * OUT: the resulting form HTML content.
 **/
 public String blankForm() {
-    String items[] = new String[3];
+    String items[] = new String[4];
     items[0] = makeItem("sender", null, 50, "Sender", "Joe Sender", "The person who ordered this message.");
     items[1] = makeItem("recipient", null, 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
     items[2] = makeItem("body", null, 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
+    items[3] = makeItem("notes", null, 200, "Notes", "Room/Class Notes", "Any notes for this message delivery (not printed).");
     return form("blank", "Create", items);
 }
 
@@ -111,15 +112,16 @@ public String blankForm() {
  * OUT: the resulting form HTML content.
 **/
 public String editForm(Connection conn, String code) {
-    String csrb[] = doSelect(conn, code);
-    if(csrb == null) {
+    String csrbn[] = doSelect(conn, code);
+    if(csrbn == null) {
         return "<p>Error: Couldn't get record for code " + code + "</p>\n";
     }
-    String items[] = new String[4];
-    items[0] = makeItem("code", csrb[0], 0, "Code", null, null);
-    items[1] = makeItem("sender", csrb[1], 50, "Sender", "Joe Sender", "The person who ordered this message.");
-    items[2] = makeItem("recipient", csrb[2], 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
-    items[3] = makeItem("body", csrb[3], 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
+    String items[] = new String[5];
+    items[0] = makeItem("code", csrbn[0], 0, "Code", null, null);
+    items[1] = makeItem("sender", csrbn[1], 50, "Sender", "Joe Sender", "The person who ordered this message.");
+    items[2] = makeItem("recipient", csrbn[2], 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
+    items[3] = makeItem("body", csrbn[3], 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
+    items[4] = makeItem("notes", csrbn[4], 200, "Notes", "Delivery notes", "Room/Class Delivery notes (not printed).");
     return form("update", "Update", items);
 }
 
@@ -135,16 +137,17 @@ public String editForm(Connection conn, String code) {
  * OUT: the resulting form HTML content.
 **/
 public String confirmForm(Connection conn, String code) {
-    String csrb[] = doSelect(conn, code);
-    if(csrb == null) {
+    String csrbn[] = doSelect(conn, code);
+    if(csrbn == null) {
         return "<p>Error: Couldn't get record for code " + code + "</p>\n";
     }
-    String items[] = new String[5];
-    items[0] = makeItem("code", csrb[0], 0, "Code", null, null);
-    items[1] = makeItem("sender", csrb[1], 0, "Sender", null, null);
-    items[2] = makeItem("recipient", csrb[2], 0, "Recipient", null, null);
-    items[3] = makeItem("body", csrb[3], 0, "Message", null, null);
-    items[4] = "<input type=\"hidden\" name=\"delete\" value=\"confirm\">";
+    String items[] = new String[6];
+    items[0] = makeItem("code", csrbn[0], 0, "Code", null, null);
+    items[1] = makeItem("sender", csrbn[1], 0, "Sender", null, null);
+    items[2] = makeItem("recipient", csrbn[2], 0, "Recipient", null, null);
+    items[3] = makeItem("body", csrbn[3], 0, "Message", null, null);
+    items[4] = makeItem("body", csrbn[4], 0, "Notes", null, null);
+    items[5] = "<input type=\"hidden\" name=\"delete\" value=\"confirm\">";
     return form("delete confirm", "Delete", items);
 }
 
@@ -179,19 +182,21 @@ public String generateCode() {
  * IN: sender:    The sender of the message after the change.
  * IN: recipient: The receipient of the message after the change.
  * IN: body:      The message send after the change.
+ * IN: notes:     Notes to the entry (not printed).
  *
  * OUT: nothing
  *
  * Side effect: Could throw a SQLException.
 **/
-public void audit(Connection conn, String username, String action, String code, String sender, String recipient, String body) throws SQLException {
-    PreparedStatement stmt = conn.prepareStatement( "INSERT INTO audit (user, action, code, sender, recipient, body) VALUES (?, ?, ?, ?, ?, ?)" );
+public void audit(Connection conn, String username, String action, String code, String sender, String recipient, String body, String notes) throws SQLException {
+    PreparedStatement stmt = conn.prepareStatement( "INSERT INTO audit (user, action, code, sender, recipient, body, notes) VALUES (?, ?, ?, ?, ?, ?, ?)" );
     stmt.setString(1, username);
     stmt.setString(2, action);
     stmt.setString(3, code);
     stmt.setString(4, sender);
     stmt.setString(5, recipient);
     stmt.setString(6, body);
+    stmt.setString(7, notes);
     stmt.executeUpdate();
 }
 
@@ -209,9 +214,9 @@ public void audit(Connection conn, String username, String action, String code, 
 public String[] doSelect(Connection conn, String code) {
     PreparedStatement stmt;
     ResultSet rs;
-    String ret[] = new String[4];
+    String ret[] = new String[5];
     try {
-        stmt = conn.prepareStatement("SELECT code, sender, recipient, body from message where code=?");
+        stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes from message where code=?");
         stmt.setString(1, code);
         rs = stmt.executeQuery();
         rs.next();
@@ -219,6 +224,7 @@ public String[] doSelect(Connection conn, String code) {
         ret[1] = rs.getString(2);
         ret[2] = rs.getString(3);
         ret[3] = rs.getString(4);
+        ret[4] = rs.getString(5);
         rs.close();
     } catch(SQLException e) {
         return null;
@@ -241,19 +247,20 @@ public String[] doSelect(Connection conn, String code) {
  * Side Effects: redirects the page to edit the message just inserted, adds an
  *               entry to the audit table.  Could throw SQLException.
 **/
-public void doInsert(HttpServletResponse response, Connection conn, String username, String sender, String recipient, String body) throws IOException {
+public void doInsert(HttpServletResponse response, Connection conn, String username, String sender, String recipient, String body, String notes) throws IOException {
     String code = null;
     int attempts_remaining = 10;
     // Since we *could* potentially get duplicate codes, we retry a bunch of
     // times, just in case.
     while(attempts_remaining > 0 && code == null) {
         try {
-            PreparedStatement stmt = conn.prepareStatement( "INSERT INTO message (code, sender, recipient, body) VALUES (?, ?, ?, ?)" );
+            PreparedStatement stmt = conn.prepareStatement( "INSERT INTO message (code, sender, recipient, body, notes) VALUES (?, ?, ?, ?, ?)" );
             code = generateCode();
             stmt.setString(1, code);
             stmt.setString(2, sender);
             stmt.setString(3, recipient);
             stmt.setString(4, body);
+            stmt.setString(5, notes);
             stmt.executeUpdate();
         } catch(SQLException e) {
             attempts_remaining--;
@@ -264,7 +271,7 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
         // We ran OK, so add an audit entry and redirect to the item we just
         // created.
         try {
-            audit(conn, username, "insert", code, sender, recipient, body);
+            audit(conn, username, "insert", code, sender, recipient, body, notes);
         } catch(SQLException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
             return;
@@ -286,21 +293,23 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
  * IN: sender:    The sender of this message.
  * IN: recipient: The recipient of this message.
  * IN: body:      The body of this message.
+ * IN: notes:     The notes assigned to this message.
  *
  * OUT: nothing
  *
  * Side Effects: redirects the page to he message just inserted, adds an
  *               entry to the audit table.  Could throw SQLException.
 **/
-public void doUpdate(HttpServletResponse response, Connection conn, String username, String code, String sender, String recipient, String body) throws SQLException, IOException {
-    PreparedStatement stmt = conn.prepareStatement("UPDATE message SET sender=?, recipient=?, body=? where code=?");
+public void doUpdate(HttpServletResponse response, Connection conn, String username, String code, String sender, String recipient, String body, String notes) throws SQLException, IOException {
+    PreparedStatement stmt = conn.prepareStatement("UPDATE message SET sender=?, recipient=?, body=?, notes=? where code=?");
     stmt.setString(1, sender);
     stmt.setString(2, recipient);
     stmt.setString(3, body);
-    stmt.setString(4, code);
+    stmt.setString(4, notes);
+    stmt.setString(5, code);
     stmt.executeUpdate();
     try {
-        audit(conn, username, "update", code, sender, recipient, body);
+        audit(conn, username, "update", code, sender, recipient, body, notes);
     } catch(SQLException e) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
         return;
@@ -327,7 +336,7 @@ public void doDelete(HttpServletResponse response, Connection conn, String usern
     stmt.setString(1, code);
     stmt.executeUpdate();
     try {
-        audit(conn, username, "delete", code, "", "", "");
+        audit(conn, username, "delete", code, "", "", "", "");
     } catch(SQLException e) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
         return;
@@ -390,6 +399,7 @@ String code = request.getParameter("code");
 String sender = request.getParameter("sender");
 String recipient = request.getParameter("recipient");
 String body = request.getParameter("body");
+String notes = request.getParameter("notes");
 String delete = request.getParameter("delete");
 
 String form = null;
@@ -399,17 +409,17 @@ if( code == null && sender == null && recipient == null && body == null && delet
     // Case 1: Display a blank form.
     form = blankForm();
     title = "Create Message";
-} else if( code != null && !code.equals("") && sender == null && recipient == null && body == null && delete == null ) {
+} else if( code != null && !code.equals("") && sender == null && recipient == null && body == null && notes == null && delete == null ) {
     // Case 2: Display a form with the bits to edit.
     form = editForm(conn, code);
     title = "Edit Message";
-} else if( code == null && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && delete == null ) {
+} else if( code == null && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 3: Run the insert and redirect.
-    doInsert(response, conn, username, sender, recipient, body);
+    doInsert(response, conn, username, sender, recipient, body, notes);
     return;
-} else if( code != null && !code.equals("") && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && delete == null ) {
+} else if( code != null && !code.equals("") && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 4: Run the update and redirect.
-    doUpdate(response, conn, username, code, sender, recipient, body);
+    doUpdate(response, conn, username, code, sender, recipient, body, notes);
     return;
 } else if( code != null && !code.equals("") && delete != null && delete.equals("ask") ) {
     // Case 5: Display the confirmation form (to confirm that we really want to delete).
@@ -443,15 +453,16 @@ if( code == null && sender == null && recipient == null && body == null && delet
                 <th scope="col">Sender</th>
                 <th scope="col">Recipient</th>
                 <th scope="col">Message</th>
+                <th scope="col">Notes</th>
                 <th scope="col">Actions</th>
             </tr>
 <%
 PreparedStatement stmt;
 if( code != null && !code.equals("") ) {
-    stmt = conn.prepareStatement("SELECT code, sender, recipient, body FROM message WHERE code != ? ORDER BY code");
+    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message WHERE code != ? ORDER BY code");
     stmt.setString(1, code);
 } else {
-    stmt = conn.prepareStatement("SELECT code, sender, recipient, body FROM message ORDER BY code");
+    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message ORDER BY code");
 }
 ResultSet result = stmt.executeQuery();
 while(result.next()) {
@@ -459,12 +470,14 @@ while(result.next()) {
     sender = StringEscapeUtils.escapeXml(result.getString(2));
     recipient = StringEscapeUtils.escapeXml(result.getString(3));
     body = StringEscapeUtils.escapeXml(result.getString(4));
+    notes = StringEscapeUtils.escapeXml(result.getString(5));
 %>
             <tr>
                 <td scope="row"><a href="https://love.riverbots.org?<%=code%>" target="_blank"><%=code%></a></td>
                 <td><%=sender%></td>
                 <td><%=recipient%></td>
                 <td><%=body%></td>
+                <td><%=notes%></td>
                 <td>
                     <a href="index.jsp?code=<%=code%>&action=edit"><img src="edit.png" alt="[Edit]" /></a>
                     <a href="index.jsp?code=<%=code%>&delete=ask"><img src="delete.png" alt="[Delete]" /></a>
