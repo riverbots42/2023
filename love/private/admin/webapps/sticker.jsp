@@ -91,6 +91,10 @@ for(int row=0; row<qr.getHeight(); row++) {
 if( toPrinter != null && toPrinter.equals("yes") ) {
     ByteArrayOutputStream lbl = new ByteArrayOutputStream();
     ImageIO.write(image, "png", lbl);
+    FileOutputStream zpl = new FileOutputStream("/tmp/dump.png");
+    ImageIO.write(image, "png", zpl);
+    zpl.close();
+
     byte[] res = Request.post("http://web_printer_1:8080")
                  .bodyForm(Form.form().add("lbl", lbl.toString()).build())
                  .execute().returnContent().asBytes();
