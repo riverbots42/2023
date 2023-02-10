@@ -57,10 +57,15 @@ public class Main implements Callable<Integer>, HttpHandler {
         public void handleRequest(HttpServerExchange exchange) throws Exception {
             // Form data is stored here
             FormData formData = exchange.getAttachment(FormDataParser.FORM_DATA);
+            StringBuilder log = new StringBuilder();
             // Iterate through form data
             for (String data : formData) {
+                log.append("Looking at " + data + "...\n");
                 for (FormData.FormValue formValue : formData.get(data)) {
-                    if (formValue.isFileItem()) {
+                    if (!formValue.isFileItem()) {
+                        log.append("...isn't a file item!\n");
+                    } else {
+                        log.append("It's a file item.\n");
                         // Process file here
                         File uploadedFile = formValue.getFileItem().getFile().toFile();
                         ZPL zpl;
@@ -74,6 +79,7 @@ public class Main implements Callable<Integer>, HttpHandler {
                             return;
                         }
                         try {
+                            log.append("Writing ZPL...\n");
                             BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/dump.zpl"));
                             writer.write(zpl.toString());
                             writer.close();
@@ -91,16 +97,20 @@ public class Main implements Callable<Integer>, HttpHandler {
                         ret.put("zpl", zpl.toString());
                         exchange.getResponseSender().send(ret.toJSONString());
                         uploadedFile.delete();
+                        return;
                     }
                 }
             }
+            BufferedWriter writer = new BufferedWriter(new FileWriter("/tmp/log"));
+            writer.write(log.toString());
+            writer.close();
         }
     }
 
     public void handleRequest(HttpServerExchange exchange) {
         Map<String,Deque<String>> req = exchange.getQueryParameters();
         StringWriter res = new StringWriter();
-        PrintWriter ret = new PrintWriter(res);
+        PrintWriter log = new PrintWriter(res);
         HeaderMap headers = exchange.getResponseHeaders();
         String method = exchange.getRequestMethod().toString();
         switch(method) {
