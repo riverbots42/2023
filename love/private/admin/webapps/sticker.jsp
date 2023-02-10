@@ -2,15 +2,68 @@
 <%@ page import="java.awt.*" %>
 <%@ page import="java.awt.image.*" %>
 <%@ page import="java.io.*" %>
+<%@ page import="java.net.*" %>
 <%@ page import="java.nio.charset.*" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
 <%@ page import="javax.imageio.*" %>
 <%@ page import="com.google.zxing.*" %>
 <%@ page import="com.google.zxing.common.*" %>
-<%@ page import="org.apache.hc.client5.http.fluent.*" %>
 <%!
 // BEGIN SHARED FUNCTION DEFININTIONS
+
+String post(BufferedImage image) {
+    String url = "http://web_printer_1:8080/";
+    String charset = "UTF-8";
+    // Just generate some unique random value.
+    String boundary = Long.toHexString(System.currentTimeMillis());
+    // Line separator required by multipart/form-data.
+    String CRLF = "\r\n";
+
+    URLConnection connection;
+    try {
+        connection = new URL(url).openConnection();
+    } catch(Exception e) {
+        return "{ \"status\": \"Error: " + e.toString() + "\"}";
+    }
+
+    connection.setDoOutput(true);
+    connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+    try (
+        OutputStream output = connection.getOutputStream();
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(output, charset), true);
+) {
+        // Send binary file.
+        writer.append("--" + boundary).append(CRLF);
+        writer.append("Content-Disposition: form-data; name=\"lbl\"; filename=\"label.png\"").append(CRLF);
+        writer.append("Content-Type: image/png").append(CRLF);
+        writer.append("Content-Transfer-Encoding: binary").append(CRLF);
+        writer.append(CRLF).flush();
+        ImageIO.write(image, "png", output);
+        output.flush(); // Important before continuing with writer!
+        writer.append(CRLF).flush(); // CRLF is important! It indicates end of boundary.
+
+        // End of multipart/form-data.
+        writer.append("--" + boundary + "--").append(CRLF).flush();
+    } catch(IOException e) {
+        return "{ \"status\": \"Error: " + e.toString() + "\"}";
+    }
+    StringBuilder ret = new StringBuilder();
+    try {
+        HttpURLConnection res = (HttpURLConnection) connection;
+        BufferedReader br = new BufferedReader(new InputStreamReader(res.getInputStream()));
+        int responseCode = ((HttpURLConnection) connection).getResponseCode();
+        String output;
+        while((output = br.readLine()) != null) {
+            ret.append(output);
+        }
+    } catch(IOException e) {
+        return "{ \"status\": \"Error: " + e.toString() + "\"}";
+    }
+    return ret.toString();
+}
+
 // END SHARED FUNCTION DEFINITIONS.
 %>
 <%
@@ -89,17 +142,13 @@ for(int row=0; row<qr.getHeight(); row++) {
     }
 }
 if( toPrinter != null && toPrinter.equals("yes") ) {
-    ByteArrayOutputStream lbl = new ByteArrayOutputStream();
-    ImageIO.write(image, "png", lbl);
     FileOutputStream zpl = new FileOutputStream("/tmp/dump.png");
     ImageIO.write(image, "png", zpl);
     zpl.close();
 
-    byte[] res = Request.post("http://web_printer_1:8080")
-                 .bodyForm(Form.form().add("lbl", lbl.toString()).build())
-                 .execute().returnContent().asBytes();
     response.setContentType("application/json");
-    response.getOutputStream().write(res);
+    String ret = post(image);
+    response.getOutputStream().write(ret.getBytes());
     return;
 }
 ImageIO.write(image, "png", response.getOutputStream());
