@@ -11,7 +11,6 @@
 <%@ page import="com.google.zxing.common.*" %>
 <%!
 // BEGIN SHARED FUNCTION DEFININTIONS
-
 String post(BufferedImage image) {
     String url = "http://web_printer_1:8080/";
     String charset = "UTF-8";
@@ -64,20 +63,21 @@ String post(BufferedImage image) {
     return ret.toString();
 }
 
+void drawOutlinedString(Graphics2D gc, String str, int x, int y) {
+    gc.setColor(Color.WHITE);
+    for( int xt=x-3; xt<=x+3; xt++ ) {
+        for( int yt=y-3; yt<=y+3; yt++) {
+            gc.drawString(str, xt, yt);
+        }
+    }
+    gc.setColor(Color.BLACK);
+    gc.drawString(str, x, y);
+}
+
 // END SHARED FUNCTION DEFINITIONS.
 %>
 <%
 // BEGIN PAGE CONTENT.
-
-// Various locations in the graphic.
-final int RECIPIENT_X = 160;
-final int RECIPIENT_Y = 639;
-final int CODE_X = 205;
-final int CODE_Y = 768;
-final int QR_X = 380;
-final int QR_Y = 360;
-final int QR_WIDTH = 250;
-final int QR_HEIGHT = 250;
 
 // Start by loading the password that we're expecting to get from the user
 // (and with which we'll be connecting to the database).
@@ -105,6 +105,16 @@ if(password == "" || !props.getProperty("password").equals(password)) {
     return;
 }
 
+// Various locations in the graphic.
+int RECIPIENT_X = Integer.parseInt(props.getProperty("recipient_text_x"));
+int RECIPIENT_Y = Integer.parseInt(props.getProperty("recipient_text_y"));
+int CODE_X = Integer.parseInt(props.getProperty("code_text_x"));
+int CODE_Y = Integer.parseInt(props.getProperty("code_text_y"));
+int QR_X = Integer.parseInt(props.getProperty("code_qr_x"));
+int QR_Y = Integer.parseInt(props.getProperty("code_qr_y"));
+int QR_WIDTH = Integer.parseInt(props.getProperty("code_qr_width"));
+int QR_HEIGHT = Integer.parseInt(props.getProperty("code_qr_height"));
+
 // OK, so for the last bit of setup, we grab a database connection.  Note that
 // we don't get here if authentication is wrong...
 Class.forName("com.mysql.jdbc.Driver");
@@ -127,11 +137,10 @@ rs.close();
 File infile = new File(request.getRealPath("sticker.png"));
 BufferedImage image = ImageIO.read(infile);
 Graphics2D gc = (Graphics2D) image.getGraphics();
-gc.setColor(Color.BLACK);
 File fontfile = new File(request.getRealPath("sticker.ttf"));
-gc.setFont(Font.createFont(Font.TRUETYPE_FONT, fontfile).deriveFont(Font.BOLD, (float)40.0));
-gc.drawString(recipient, RECIPIENT_X, RECIPIENT_Y);
-gc.drawString(code, CODE_X, CODE_Y);
+gc.setFont(Font.createFont(Font.TRUETYPE_FONT, fontfile).deriveFont(Font.BOLD, (float)32.0));
+drawOutlinedString(gc, recipient, RECIPIENT_X, RECIPIENT_Y);
+drawOutlinedString(gc, code, CODE_X, CODE_Y);
 String URL = "https://love.riverbots.org?" + code;
 BitMatrix qr = new MultiFormatWriter().encode(URL, BarcodeFormat.QR_CODE, QR_WIDTH, QR_HEIGHT);
 for(int row=0; row<qr.getHeight(); row++) {
