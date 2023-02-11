@@ -41,23 +41,28 @@ public class Robot extends TimedRobot {
   VictorSPX leftMotorControllerTwo = new VictorSPX(6);
   VictorSPX rightMotorControllerOne = new VictorSPX(7);
   VictorSPX rightMotorControllerTwo = new VictorSPX(8);
+  //channel 0 is broken on our current RoboRio.  Would not recommend trying to use it
   Spark sparkScoringMechanismMotor = new Spark(1);
   Spark screwDriveMotor = new Spark(2);
-
+  
   private RobotContainer m_robotContainer;
 
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
+  
   Accelerometer accelerometer = new BuiltInAccelerometer();
-  //These constants set channels for the controller.  On the back of the Logitech controller we use,
-  //there is a switch.  Ensure the switch it set to "X" rather than "D" or the channels will be wrong
+  //These constants set axes and channels for the controller. The first two are axes. 
+  //On the back of the Logitech controller we use, there is a switch.
+  //Ensure the switch it set to "X" rather than "D" or the channels will be wrong
+  
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
+
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
-  final int LEFT_BUMPER = 10;
-  final int RIGHT_BUMPER = 11;
+  final int LEFT_BUMPER = 2;
+  final int RIGHT_BUMPER = 3;
   UsbCamera parkingCamera;
   NetworkTableEntry camera;
 
@@ -128,6 +133,7 @@ public class Robot extends TimedRobot {
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
+    //Left side needs to be inversed to go forwards, otherwise it will work against the right side. (Robot will spin)
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
 
@@ -146,16 +152,18 @@ public class Robot extends TimedRobot {
     double RightBumperOut = stick.getRawAxis(RIGHT_BUMPER);
     double LeftBumperOut = stick.getRawAxis(LEFT_BUMPER);
 
+    //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
     leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
     rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
     sparkScoringMechanismMotor.set(RightTriggerOut - LeftTriggerOut);
     screwDriveMotor.set(RightBumperOut - LeftBumperOut);
-    //and should probably be replaced with a timer-
+
     double previousXAccelerometer = accelerometer.getX();
     double previousYAccelerometer = accelerometer.getY();
     double previousZAccelerometer = accelerometer.getZ();
+    //Should probably be replaced with a timer
     if(accelerometer.getX() != previousXAccelerometer)
     {
       System.out.println(accelerometer.getX());
