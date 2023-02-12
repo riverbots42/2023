@@ -1,0 +1,25 @@
+#
+# This playbook deploys the website code.
+#
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Create the appropriate tomcat directory.
+    ansible.builtin.file:
+      path: /var/lib/tomcat9/webapps/ROOT/
+      state: directory
+  - name: Copy the files in webapps/ to the target.
+    ansible.builtin.copy:
+      src: love
+      dest: /var/lib/tomcat9/webapps/ROOT/
+      mode: 0644
+      owner: root
+      group: root
+  - name: Copy in the database password.
+    ansible.builtin.copy:
+      src: love.properties
+      dest: /var/lib/tomcat9/webapps/ROOT/META-INF/love.properties
+      mode: 0644
+      owner: root
+      group: root

@@ -1,0 +1,24 @@
+#
+# The very first Ansible playbook run, this one just installs the packages we
+# know we'll need later.
+#
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Install base useful packages
+    apt:
+      name:
+        - ddclient
+        - dnsmasq
+        - docker
+        - docker-compose
+        - hostapd
+        - iw
+        - less
+        - nmap
+        - sudo
+        - tcpdump
+        - vim
+        - wireguard
+      state: latest

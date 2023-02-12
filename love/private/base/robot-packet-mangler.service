@@ -1,0 +1,11 @@
+[Unit]
+Description=Robot Communications Manager
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/robot-packet-mangler
+
+[Install]
+WantedBy=multi-user.target
