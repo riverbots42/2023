@@ -5,13 +5,13 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
+
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
-
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -35,22 +35,32 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final Joystick stick = new Joystick(0);
-
-  VictorSPX leftMotorController = new VictorSPX(2);
-  VictorSPX rightMotorController = new VictorSPX(1);
-  VictorSPX screwDriveMotorController = new VictorSPX(3);
+  VictorSPX leftMotorControllerOne = new VictorSPX(5);
+  VictorSPX leftMotorControllerTwo = new VictorSPX(6);
+  VictorSPX rightMotorControllerOne = new VictorSPX(7);
+  VictorSPX rightMotorControllerTwo = new VictorSPX(8);
+  //PWM channel 0 is broken on our current RoboRio.  Would not recommend trying to use it
+  Spark brushElevator = new Spark(1);
+  Spark screwDriveMotor = new Spark(2);
+  
   private RobotContainer m_robotContainer;
 
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
+  
   Accelerometer accelerometer = new BuiltInAccelerometer();
+  //These constants set axes and channels for the controller. The first two are axes. 
+  //On the back of the Logitech controller we use, there is a switch.
+  //Ensure the switch it set to "X" rather than "D" or the channels will be wrong
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
+
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
-
+  final int LEFT_BUMPER = 5;
+  final int RIGHT_BUMPER = 6;
   UsbCamera parkingCamera;
   NetworkTableEntry camera;
 
@@ -66,6 +76,7 @@ public class Robot extends TimedRobot {
 
     camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
     parkingCamera = CameraServer.startAutomaticCapture(0);
+
   }
 
   /**
@@ -120,29 +131,62 @@ public class Robot extends TimedRobot {
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
-    leftMotorController.setInverted(true);
+    //Left side needs to be inversed to go forwards, otherwise it will work against the right side. (Robot will spin)
+    leftMotorControllerOne.setInverted(true);
+    leftMotorControllerTwo.setInverted(true);
 
     gyro = new I2C(onBoard, gyroAdress);
     gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
     gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
+    System.out.println("debug plz");
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
 
-    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.8;
-    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.8;
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER);
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
 
-    leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
-    rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
-    screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
+    //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    brushElevator.set(RightTriggerOut - LeftTriggerOut);
+
+    if(stick.getRawButton(RIGHT_BUMPER))
+    {
+      screwDriveMotor.set(1);
+    }
+    else if(stick.getRawButton(LEFT_BUMPER))
+    {
+      screwDriveMotor.set(-1);
+    }
+    else
+    {
+      screwDriveMotor.set(0);
+    }
     
-    System.out.println(accelerometer.getX());
-    System.out.println(accelerometer.getY());
-    System.out.println(accelerometer.getZ());
+
+    double previousXAccelerometer = accelerometer.getX();
+    double previousYAccelerometer = accelerometer.getY();
+    double previousZAccelerometer = accelerometer.getZ();
+    //Should probably be replaced with a timer
+    if(accelerometer.getX() != previousXAccelerometer)
+    {
+      System.out.println(accelerometer.getX());
+    }
+    if(accelerometer.getY() != previousYAccelerometer)
+    {
+      System.out.println(accelerometer.getY());
+    }
+    if(accelerometer.getZ() != previousZAccelerometer)
+    {
+      System.out.println(accelerometer.getZ());
+    }
   }
- 
+  
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
