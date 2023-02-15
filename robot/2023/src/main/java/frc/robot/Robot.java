@@ -62,6 +62,8 @@ public class Robot extends TimedRobot {
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
   UsbCamera parkingCamera;
+  UsbCamera leftBackCamera;
+  UsbCamera rightBackCamera;
   NetworkTableEntry camera;
 
   /**
@@ -76,7 +78,8 @@ public class Robot extends TimedRobot {
 
     camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
     parkingCamera = CameraServer.startAutomaticCapture(0);
-
+    leftBackCamera = CameraServer.startAutomaticCapture(1);
+    rightBackCamera = CameraServer.startAutomaticCapture(2);
   }
 
   /**
@@ -100,6 +103,7 @@ public class Robot extends TimedRobot {
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
   public void disabledInit() {}
+
 
   @Override
   public void disabledPeriodic() {}
@@ -149,10 +153,10 @@ public class Robot extends TimedRobot {
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
 
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
-    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
-    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
-    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
-    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.3);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.3);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.3);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.3);
     brushElevator.set(RightTriggerOut - LeftTriggerOut);
 
     if(stick.getRawButton(RIGHT_BUMPER))
