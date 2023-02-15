@@ -5,15 +5,14 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
+
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
+import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 
-import edu.wpi.first.wpilibj.AddressableLED;
-import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import java.util.Random;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -27,6 +26,10 @@ import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+
+
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -36,27 +39,33 @@ import edu.wpi.first.networktables.NetworkTableInstance;
  */
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
+  
+  AddressableLED leds = new AddressableLED(3);
+  AddressableLEDBuffer ledBuff = new AddressableLEDBuffer(60);
 
   private final Joystick stick = new Joystick(0);
+  VictorSPX leftMotorControllerOne = new VictorSPX(5);
+  VictorSPX leftMotorControllerTwo = new VictorSPX(6);
+  VictorSPX rightMotorControllerOne = new VictorSPX(7);
+  VictorSPX rightMotorControllerTwo = new VictorSPX(8);
+  Spark sparkScoringMechanismMotor = new Spark(1);
+  Spark screwDriveMotor = new Spark(2);
 
-  VictorSPX leftMotorController = new VictorSPX(2);
-  VictorSPX rightMotorController = new VictorSPX(1);
-  VictorSPX screwDriveMotorController = new VictorSPX(3);
   private RobotContainer m_robotContainer;
-
-  AddressableLED leds = new AddressableLED(0);
-  AddressableLEDBuffer ledBuff = new AddressableLEDBuffer(30);
 
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
   Accelerometer accelerometer = new BuiltInAccelerometer();
-  
+  //These constants set channels for the controller.  On the back of the Logitech controller we use,
+  //there is a switch.  Ensure the switch it set to "X" rather than "D" or the channels will be wrong
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
+  final int RIGHT_STICK_HORIZONTAL = 4;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
-
+  final int LEFT_BUMPER = 10;
+  final int RIGHT_BUMPER = 11;
   UsbCamera parkingCamera;
   NetworkTableEntry camera;
 
@@ -70,8 +79,11 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
+    
+
     camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
     parkingCamera = CameraServer.startAutomaticCapture(0);
+
   }
 
   /**
@@ -112,35 +124,8 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {
-    for(int count = 0; count < 1; count += 0.1){
-      leftMotorController.set(VictorSPXControlMode.PercentOutput, count);
-      rightMotorController.set(VictorSPXControlMode.PercentOutput,-1 * count);
-    }
-    leftMotorController.set(VictorSPXControlMode.PercentOutput, 0);
-    rightMotorController.set(VictorSPXControlMode.PercentOutput,0);
-	randomRGB();
-	leds.setData(ledBuff);
-	
-  }
-  public void randomRGB(){
-	int choice = (int)(Math.random()*3);
-	if(choice == 0){
-		for(int i = 0; i < ledBuff.getLength(); i++){
-			ledBuff.setRGB(i,255,0,0);
-		}
-	}
-	if(choice == 1){
-		for(int i = 0; i < ledBuff.getLength(); i++){
-			ledBuff.setRGB(i,0,255,0);
-		}
-	}
-	else{
-		for(int i = 0; i < ledBuff.getLength(); i++){
-			ledBuff.setRGB(i,0,0,255);
-		}
-	}
-  }
+  public void autonomousPeriodic() {}
+
   @Override
   public void teleopInit() {
     // This makes sure that the autonomous stops running when
@@ -151,31 +136,86 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel();
     }
 
+    
+    leds.setLength(ledBuff.getLength());
+    leds.setData(ledBuff);
+    leds.start();
+
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
-    leftMotorController.setInverted(true);
+    leftMotorControllerOne.setInverted(true);
+    leftMotorControllerTwo.setInverted(true);
 
     gyro = new I2C(onBoard, gyroAdress);
     gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
     gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
+    System.out.println("debug plz");
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
 
-    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * 0.8;
-    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * 0.8;
-
-    leftMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL));
-    rightMotorController.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL));
-    screwDriveMotorController.set(VictorSPXControlMode.PercentOutput, RightTriggerOut - LeftTriggerOut);
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER);
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
+    double RightBumperOut = stick.getRawAxis(RIGHT_BUMPER);
+    double LeftBumperOut = stick.getRawAxis(LEFT_BUMPER);
     
-    System.out.println(accelerometer.getX());
-    System.out.println(accelerometer.getY());
-    System.out.println(accelerometer.getZ());
+    double prevMotorPercent = stick.getRawAxis(LEFT_STICK_VERTICAL);
+
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL) * 0.3);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* 0.3);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL) * 0.3);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* 0.3);
+    double nowMotorPercent = stick.getRawAxis(LEFT_STICK_VERTICAL);
+    if(prevMotorPercent != nowMotorPercent)
+    {
+      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,prevMotorPercent + ((RIGHT_STICK_HORIZONTAL) * -0.5));
+      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,prevMotorPercent + ((RIGHT_STICK_HORIZONTAL) * -0.5));
+      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,prevMotorPercent + ((RIGHT_STICK_HORIZONTAL) * -0.5));
+      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,prevMotorPercent + ((RIGHT_STICK_HORIZONTAL) * -0.5));
+    }
+
+    sparkScoringMechanismMotor.set(RightTriggerOut - LeftTriggerOut);
+    screwDriveMotor.set(RightBumperOut - LeftBumperOut);
+    //and should probably be replaced with a timer-
+    /* 
+    int choice = (int)(Math.random()*3);
+    if(choice == 0)
+    {
+      for(int i = 0; i < ledBuff.getLength(); i++)
+      {
+        ledBuff.setRGB(i,166,16,30);
+      }
+    }
+    else if(choice == 1)
+    {
+      for(int i = 0; i < ledBuff.getLength(); i++)
+      {
+        ledBuff.setRGB(i,255,105,180);
+      }
+    }
+    else
+    {
+      for(int i = 0; i < ledBuff.getLength(); i++)
+      {
+        ledBuff.setRGB(i,255,192,203);
+      }
+    }
+    */
+    for(int i = 0; i < ledBuff.getLength(); i++)
+    {
+      ledBuff.setRGB(i,255,255,203);
+      System.out.println("PLZ HELP");
+    }
+    
+    
+
+    // Blood red == 166,16,30
+    // Hot pink == 255,105,180
+    // Pink == 255,192,203
   }
- 
+  
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
