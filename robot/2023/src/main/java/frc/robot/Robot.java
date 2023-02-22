@@ -42,8 +42,6 @@ public class Robot extends TimedRobot {
   //PWM channel 0 is broken on our current RoboRio.  Would not recommend trying to use it
   Spark brushElevator = new Spark(1);
   Spark screwDriveMotor = new Spark(2);
-  
-  private RobotContainer m_robotContainer;
 
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
@@ -74,8 +72,6 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
-
     camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
     parkingCamera = CameraServer.startAutomaticCapture(0);
     leftBackCamera = CameraServer.startAutomaticCapture(1);
@@ -111,8 +107,6 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
