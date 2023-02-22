@@ -5,7 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
 
 import edu.wpi.first.wpilibj.I2C;
@@ -24,6 +23,7 @@ import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
+import frc.robot.Drivetrain;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -63,7 +63,6 @@ public class Robot extends TimedRobot {
   UsbCamera leftBackCamera;
   UsbCamera rightBackCamera;
   NetworkTableEntry camera;
-
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -93,7 +92,6 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     
     CommandScheduler.getInstance().run();
-    
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
