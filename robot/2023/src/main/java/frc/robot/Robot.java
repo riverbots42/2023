@@ -23,8 +23,8 @@ import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
-import frc.robot.Drivetrain;
 
+import edu.wpi.first.wpilibj.Encoder;
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -48,6 +48,10 @@ public class Robot extends TimedRobot {
   I2C gyro;
   
   Accelerometer accelerometer = new BuiltInAccelerometer();
+    
+  // Initializes an encoder on DIO pins 0 and 1
+  // Defaults to 4X decoding and non-inverted
+  Encoder encoder = new Encoder(0, 1);
   //These constants set axes and channels for the controller. The first two are axes. 
   //On the back of the Logitech controller we use, there is a switch.
   //Ensure the switch it set to "X" rather than "D" or the channels will be wrong
@@ -63,6 +67,7 @@ public class Robot extends TimedRobot {
   UsbCamera leftBackCamera;
   UsbCamera rightBackCamera;
   NetworkTableEntry camera;
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -75,6 +80,9 @@ public class Robot extends TimedRobot {
     parkingCamera = CameraServer.startAutomaticCapture(0);
     leftBackCamera = CameraServer.startAutomaticCapture(1);
     rightBackCamera = CameraServer.startAutomaticCapture(2);
+
+    //Encoder's distance/pulse
+    encoder.setDistancePerPulse(1./256.);
   }
 
   /**
@@ -102,18 +110,26 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {}
 
-  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    //set robot starting distance to 0
+    encoder.reset();
   }
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() 
+  {
+    //If 10 feet haven't been travelled, move forward
+    if(encoder.getDistance() < 10)
+    {
+
+    }
+  }
 
   @Override
   public void teleopInit() {
@@ -130,11 +146,6 @@ public class Robot extends TimedRobot {
     //Left side needs to be inversed to go forwards, otherwise it will work against the right side. (Robot will spin)
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
-
-    gyro = new I2C(onBoard, gyroAdress);
-    gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
-    gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
-    System.out.println("debug plz");
   }
 
   /** This function is called periodically during operator control. */
@@ -145,12 +156,15 @@ public class Robot extends TimedRobot {
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
 
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
-    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.3);
-    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.3);
-    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.3);
-    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.3);
+    //Multiplied by 65% to decrease power and make the robot more controllable
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.65);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.65);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.65);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.65);
     brushElevator.set(RightTriggerOut - LeftTriggerOut);
 
+    //if right bumper is pressed, screw drive goes one direction, if left is pressed, it goes the other.  Otherwise, remain
+    //stationary
     if(stick.getRawButton(RIGHT_BUMPER))
     {
       screwDriveMotor.set(1);
@@ -164,11 +178,11 @@ public class Robot extends TimedRobot {
       screwDriveMotor.set(0);
     }
     
-
+    
+    //Should probably be replaced with a timer (Accelerometer returns differing values while stationary)
     double previousXAccelerometer = accelerometer.getX();
     double previousYAccelerometer = accelerometer.getY();
     double previousZAccelerometer = accelerometer.getZ();
-    //Should probably be replaced with a timer
     if(accelerometer.getX() != previousXAccelerometer)
     {
       System.out.println(accelerometer.getX());
