@@ -34,7 +34,9 @@ happens to the brightness of the LED:
 
 ![PWM Animation](pwm.gif)
 
-To figure out the *effective voltage* of a PWM, you'll need to know the *duty cycle* first:
+The wider the positive part of the wave is, the brighter the LED is.  The narrower the
+positive part of the wave is, the dimmer the LED is.  To figure out the *effective voltage*
+of a PWM, you'll need to know the *duty cycle* first:
 
 dutyCycle = positiveLength / totalPeriodLength
 
