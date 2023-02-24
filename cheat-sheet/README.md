@@ -4,9 +4,60 @@ This is a collected set of pre-canned answers to questions that FRC people are l
 players during competition.  All team members are expected to be able to answer questions on
 this list on-demand at any time.
 
+# What's Our Scoring Plan?
+
+1. Quick 15 pts by pushing in one cone, then auto-parking on the platform.
+2. Play defense and score opportunistically when we can.
+
+# What's With the Concrete Block?
+
+Our autoparking system can change our center of gravity when on the platform.  We can even
+compensate for the parking of our alliance teammates if they're a bit off.
+
+# What's With the Broom?
+
+It's what we'll use to sweep the competition :-).  But seriously, there's a bit of give on
+the plastic and the bristles which let it get into places the bot itself can't for scoring.
+
+# What Kind of Drive System are We Using?
+
+Differential, or "tank" drive.  One stick on the gamepad for each side.
+
+# What Kind of Controllers Are We Using?
+
+Victor SPXes for the drive motors, hooked up to the CAN bus.  Spark PWM modules
+for the broom and screw drive.
+
+# What Kind of Motors Are We Using?
+
+VEX CIM for the main drive, Mini-CIM for the accessories.
+
+# Is All This Stuff FRC Legal?
+
+YES.
+
+# What About the Accelerometer and Encoders?
+
+We have a NavX daughter board for the RoboRIO and E4T encoders on each of the gearboxes.  The
+E4T's are hooked up on DIO.
+
+# What Does the NavX Accelerometer Do?
+
+It tells us how much the robot is tilting, so we can see if we need to shift our center of mass.
+
+# What Do the Encoders Do?
+
+They tell us how far we've gone, so we know how far we've moved in autonomous.
+
+# What Busses/Ports Are We Using on the RoboRIO?
+
+- CAN - The PDU and the Drive (Victor) motor controllers.
+- PWN - The SPARK motor controllers.
+- DIO - The E4T encoders.
+
 # PWM
 
-## What is PWM?
+## What Is PWM?
 
 PWM stands for Pulse-Width Modulation and is used anytime a digital system (such as our
 RoboRIO) needs to set an analog percentage to a device such as a motor or an LED.
