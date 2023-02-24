@@ -47,7 +47,7 @@ It tells us how much the robot is tilting, so we can see if we need to shift our
 
 # What Do the Encoders Do?
 
-They tell us how far we've gone, so know how far we've moved in autonomous.
+They tell us how far we've gone, so we know how far we've moved in autonomous.
 
 # What Busses/Ports Are We Using on the RoboRIO?
 
