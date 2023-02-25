@@ -25,6 +25,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 
 
 import edu.wpi.first.wpilibj.Encoder;
+import java.util.*;
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -46,12 +47,14 @@ public class Robot extends TimedRobot {
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
-  
   Accelerometer accelerometer = new BuiltInAccelerometer();
-    
   // Initializes an encoder on DIO pins 0 and 1
   // Defaults to 4X decoding and non-inverted
   Encoder encoder = new Encoder(0, 1);
+  Iterator<Path> pathElements;
+  Path currentPath;
+
+
   //These constants set axes and channels for the controller. The first two are axes. 
   //On the back of the Logitech controller we use, there is a switch.
   //Ensure the switch it set to "X" rather than "D" or the channels will be wrong
@@ -111,24 +114,43 @@ public class Robot extends TimedRobot {
   public void disabledPeriodic() {}
 
   @Override
-  public void autonomousInit() {
+  public void autonomousInit() 
+  {
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+
     //set robot starting distance to 0
     encoder.reset();
+    leftMotorControllerOne.setInverted(true);
+    leftMotorControllerTwo.setInverted(true);
+    //I assume pathArray will need a value soon
+    ArrayList<Path> pathArray = null;
+    pathElements = pathArray.iterator();
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() 
   {
-    //If 10 feet haven't been travelled, move forward
-    if(encoder.getDistance() < 10)
+    //If 2 feet haven't been travelled, move forward
+    if(encoder.getDistance() < 2)
     {
-
+      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput, .3);
+      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput, .3);
+      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput, .3);
+      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput, .3);
     }
+    
+    if(currentPath == null && pathElements.hasNext())
+    {
+      currentPath = pathElements.next();
+    }
+    if(currentPath.isDone())
+      currentPath = null;
+    if(currentPath != null)
+      currentPath.tick();
   }
 
   @Override
