@@ -50,7 +50,8 @@ public class Robot extends TimedRobot {
   Accelerometer accelerometer = new BuiltInAccelerometer();
   // Initializes an encoder on DIO pins 0 and 1
   // Defaults to 4X decoding and non-inverted
-  Encoder encoder = new Encoder(0, 1);
+  Encoder leftEncoder = new Encoder(0, 1);
+  Encoder rightEncoder = new Encoder(0,1);
   Iterator<Path> pathElements;
   Path currentPath;
 
@@ -85,7 +86,8 @@ public class Robot extends TimedRobot {
     rightBackCamera = CameraServer.startAutomaticCapture(2);
 
     //Encoder's distance/pulse
-    encoder.setDistancePerPulse(1./256.);
+    leftEncoder.setDistancePerPulse(1./256.);
+    rightEncoder.setDistancePerPulse(1./256.);
   }
 
   /**
@@ -122,7 +124,8 @@ public class Robot extends TimedRobot {
     }
 
     //set robot starting distance to 0
-    encoder.reset();
+    leftEncoder.reset();
+    rightEncoder.reset();
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
     //I assume pathArray will need a value soon
@@ -135,14 +138,18 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() 
   {
     //If 2 feet haven't been travelled, move forward
-    if(encoder.getDistance() < 2)
+    if(leftEncoder.getDistance() < 2)
     {
       leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput, .3);
       leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput, .3);
+    }
+    else if(rightEncoder.getDistance() < 2)
+    {
+      
       rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput, .3);
       rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput, .3);
     }
-    
+
     if(currentPath == null && pathElements.hasNext())
     {
       currentPath = pathElements.next();
