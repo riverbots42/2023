@@ -52,8 +52,19 @@ They tell us how far we've gone, so know how far we've moved in autonomous.
 # What Busses/Ports Are We Using on the RoboRIO?
 
 - CAN - The PDU and the Drive (Victor) motor controllers.
-- PWN - The SPARK motor controllers.
+- USB - Cameras and occasionally debugging the RoboRIO.
+- Ethernet - Connecting the RoboRIO to the OpenMesh radio for Wifi.
+- PWM - The SPARK motor controllers.
 - DIO - The E4T encoders.
+
+# What Radio(s) Are We Using?
+
+The FRC-standard OpenMesh radio.
+
+# Are There Any Additional Batteries or Radios?
+
+No.  Nothing in the cameras or elsewhere on the bot.  Just the main power battery and the
+OpenMesh radio.
 
 # PWM
 
