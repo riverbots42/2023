@@ -50,8 +50,8 @@ public class Robot extends TimedRobot {
   Accelerometer accelerometer = new BuiltInAccelerometer();
   // Initializes an encoder on DIO pins 0 and 1
   // Defaults to 4X decoding and non-inverted
-  Encoder leftEncoder = new Encoder(0, 1);
-  Encoder rightEncoder = new Encoder(0,1);
+  Encoder leftEncoder = new Encoder(4, 5);
+  Encoder rightEncoder = new Encoder(2,3);
   Iterator<Path> pathElements;
   Path currentPath;
 
@@ -118,18 +118,14 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() 
   {
-    // schedule the autonomous command (example)
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
-    }
-
+ 
     //set robot starting distance to 0
     leftEncoder.reset();
     rightEncoder.reset();
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
     //I assume pathArray will need a value soon
-    ArrayList<Path> pathArray = null;
+    ArrayList<Path> pathArray = new ArrayList<Path>();
     pathElements = pathArray.iterator();
   }
 
