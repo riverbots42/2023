@@ -6,7 +6,6 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.I2C.Port;
-
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -18,10 +17,10 @@ import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
 
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.UsbCamera;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+//import edu.wpi.first.cameraserver.CameraServer;
+//import edu.wpi.first.cscore.UsbCamera;
+//import edu.wpi.first.networktables.NetworkTableEntry;
+//import edu.wpi.first.networktables.NetworkTableInstance;
 
 
 import edu.wpi.first.wpilibj.Encoder;
@@ -33,7 +32,7 @@ import java.util.*;
  * project.
  */
 public class Robot extends TimedRobot {
-  private Command m_autonomousCommand;
+  // private Command m_autonomousCommand;
 
   private final Joystick stick = new Joystick(0);
   VictorSPX leftMotorControllerOne = new VictorSPX(5);
@@ -50,10 +49,11 @@ public class Robot extends TimedRobot {
   Accelerometer accelerometer = new BuiltInAccelerometer();
   // Initializes an encoder on DIO pins 0 and 1
   // Defaults to 4X decoding and non-inverted
-  Encoder leftEncoder = new Encoder(4, 5);
+  Encoder leftEncoder = new Encoder(0, 1);
   Encoder rightEncoder = new Encoder(2,3);
   Iterator<Path> pathElements;
   Path currentPath;
+  final double ENCODER_DISTANCE_PER_PULSE = 1./256.;
 
 
   //These constants set axes and channels for the controller. The first two are axes. 
@@ -62,15 +62,19 @@ public class Robot extends TimedRobot {
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
+  final double ROBOT_SPEED_MULTIPLIER = .6;
+  final double AUTONOMOUS_ROBOT_SPEED = .3;
 
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
+  /* 
   UsbCamera parkingCamera;
   UsbCamera leftBackCamera;
   UsbCamera rightBackCamera;
   NetworkTableEntry camera;
+ */
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -80,14 +84,15 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
-    parkingCamera = CameraServer.startAutomaticCapture(0);
-    leftBackCamera = CameraServer.startAutomaticCapture(1);
-    rightBackCamera = CameraServer.startAutomaticCapture(2);
+
+    //camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
+   // parkingCamera = CameraServer.startAutomaticCapture(0);
+   // leftBackCamera = CameraServer.startAutomaticCapture(1);
+   // rightBackCamera = CameraServer.startAutomaticCapture(2);
 
     //Encoder's distance/pulse
-    leftEncoder.setDistancePerPulse(1./256.);
-    rightEncoder.setDistancePerPulse(1./256.);
+    leftEncoder.setDistancePerPulse(ENCODER_DISTANCE_PER_PULSE);
+    rightEncoder.setDistancePerPulse(ENCODER_DISTANCE_PER_PULSE);
   }
 
   /**
@@ -103,7 +108,6 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    
     CommandScheduler.getInstance().run();
   }
 
@@ -118,42 +122,35 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() 
   {
- 
     //set robot starting distance to 0
     leftEncoder.reset();
+    leftEncoder.setReverseDirection(true);
     rightEncoder.reset();
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
-    //I assume pathArray will need a value soon
     ArrayList<Path> pathArray = new ArrayList<Path>();
+    pathArray.add(new Path(3, 3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathArray.add(new Path(-3, -3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathArray.add(new Path(3, -3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathArray.add(new Path(-3, 3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
     pathElements = pathArray.iterator();
   }
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() 
+  public void autonomousPeriodic()
   {
-    //If 2 feet haven't been travelled, move forward
-    if(leftEncoder.getDistance() < 2)
-    {
-      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput, .3);
-      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput, .3);
-    }
-    else if(rightEncoder.getDistance() < 2)
-    {
-      
-      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput, .3);
-      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput, .3);
-    }
-
+    System.out.printf("%f %f\n", leftEncoder.getDistance(), rightEncoder.getDistance());
     if(currentPath == null && pathElements.hasNext())
     {
       currentPath = pathElements.next();
     }
+    if(currentPath!=null) {
     if(currentPath.isDone())
       currentPath = null;
     if(currentPath != null)
       currentPath.tick();
+    }
   }
 
   @Override
@@ -162,9 +159,9 @@ public class Robot extends TimedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
-    }
+    //if (m_autonomousCommand != null) {
+    //  m_autonomousCommand.cancel();
+    //}
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
@@ -181,11 +178,10 @@ public class Robot extends TimedRobot {
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
 
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
-    //Multiplied by 65% to decrease power and make the robot more controllable
-    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.65);
-    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.65);
-    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.65);
-    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.65);
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
     brushElevator.set(RightTriggerOut - LeftTriggerOut);
 
     //if right bumper is pressed, screw drive goes one direction, if left is pressed, it goes the other.  Otherwise, remain
