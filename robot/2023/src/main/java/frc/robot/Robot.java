@@ -5,7 +5,9 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
+
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -16,15 +18,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
+import com.kauailabs.navx.frc.AHRS;
 
-//import edu.wpi.first.cameraserver.CameraServer;
-//import edu.wpi.first.cscore.UsbCamera;
-//import edu.wpi.first.networktables.NetworkTableEntry;
-//import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import java.util.LinkedList;
 
-
-import edu.wpi.first.wpilibj.Encoder;
-import java.util.*;
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -32,7 +33,7 @@ import java.util.*;
  * project.
  */
 public class Robot extends TimedRobot {
-  // private Command m_autonomousCommand;
+  private Command m_autonomousCommand;
 
   private final Joystick stick = new Joystick(0);
   VictorSPX leftMotorControllerOne = new VictorSPX(5);
@@ -46,35 +47,28 @@ public class Robot extends TimedRobot {
   static final Port onBoard = Port.kOnboard;
   static final int gyroAdress = 0x68;
   I2C gyro;
+  
   Accelerometer accelerometer = new BuiltInAccelerometer();
-  // Initializes an encoder on DIO pins 0 and 1
-  // Defaults to 4X decoding and non-inverted
-  Encoder leftEncoder = new Encoder(0, 1);
-  Encoder rightEncoder = new Encoder(2,3);
-  Iterator<Path> pathElements;
-  Path currentPath;
-  final double ENCODER_DISTANCE_PER_PULSE = 1./256.;
-
-
   //These constants set axes and channels for the controller. The first two are axes. 
   //On the back of the Logitech controller we use, there is a switch.
   //Ensure the switch it set to "X" rather than "D" or the channels will be wrong
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
-  final double ROBOT_SPEED_MULTIPLIER = .6;
-  final double AUTONOMOUS_ROBOT_SPEED = .3;
 
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
-  /* 
   UsbCamera parkingCamera;
   UsbCamera leftBackCamera;
   UsbCamera rightBackCamera;
   NetworkTableEntry camera;
- */
+  AHRS navX;
+  static final double kOffBalanceAngleThresholdDegrees = 10;
+  static final double kOonBalanceAngleThresholdDegrees  = 5;
+  public double avgAdjustRate = 1;
+  LinkedList<Double> Queue = new LinkedList<Double>();
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -84,15 +78,10 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-
-    //camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
-   // parkingCamera = CameraServer.startAutomaticCapture(0);
-   // leftBackCamera = CameraServer.startAutomaticCapture(1);
-   // rightBackCamera = CameraServer.startAutomaticCapture(2);
-
-    //Encoder's distance/pulse
-    leftEncoder.setDistancePerPulse(ENCODER_DISTANCE_PER_PULSE);
-    rightEncoder.setDistancePerPulse(ENCODER_DISTANCE_PER_PULSE);
+    camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
+    parkingCamera = CameraServer.startAutomaticCapture(0);
+    leftBackCamera = CameraServer.startAutomaticCapture(1);
+    rightBackCamera = CameraServer.startAutomaticCapture(2);
   }
 
   /**
@@ -108,7 +97,10 @@ public class Robot extends TimedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
+    
     CommandScheduler.getInstance().run();
+    
+    
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -119,37 +111,43 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {}
 
+  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
-  public void autonomousInit() 
-  {
-    //set robot starting distance to 0
-    leftEncoder.reset();
-    leftEncoder.setReverseDirection(true);
-    rightEncoder.reset();
-    leftMotorControllerOne.setInverted(true);
-    leftMotorControllerTwo.setInverted(true);
-    ArrayList<Path> pathArray = new ArrayList<Path>();
-    pathArray.add(new Path(3, 3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    pathArray.add(new Path(-3, -3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    pathArray.add(new Path(3, -3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    pathArray.add(new Path(-3, 3, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    pathElements = pathArray.iterator();
+  public void autonomousInit() {
+    // schedule the autonomous command (example)
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.schedule();
+    }
   }
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic()
-  {
-    System.out.printf("%f %f\n", leftEncoder.getDistance(), rightEncoder.getDistance());
-    if(currentPath == null && pathElements.hasNext())
+  public void autonomousPeriodic() {
+    double adjustRate = stick.getX();
+    double pitchAngleDegrees = navX.getPitch();
+    boolean autoBalancePitch = false;
+    
+    
+    Queue.add(pitchAngleDegrees);
+    
+    // Check if the pitch angle is more than the set threshold (10 degrees)
+    if ( !autoBalancePitch && (Math.abs(pitchAngleDegrees) >= Math.abs(kOffBalanceAngleThresholdDegrees))) 
     {
-      currentPath = pathElements.next();
+      autoBalancePitch = true;
     }
-    if(currentPath!=null) {
-    if(currentPath.isDone())
-      currentPath = null;
-    if(currentPath != null)
-      currentPath.tick();
+    // Check if it is less than 5 degrees off.
+    else if ( autoBalancePitch && (Math.abs(pitchAngleDegrees) <= Math.abs(kOonBalanceAngleThresholdDegrees))) 
+    {
+      autoBalancePitch = false;
+    }
+    
+    if (autoBalancePitch) {
+      double pitchAngleRadians = pitchAngleDegrees * (Math.PI / 180.0);
+      adjustRate = Math.sin(pitchAngleRadians) * -1;
+      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
+      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
+      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
+      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
     }
   }
 
@@ -159,15 +157,20 @@ public class Robot extends TimedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    //if (m_autonomousCommand != null) {
-    //  m_autonomousCommand.cancel();
-    //}
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
+    }
 
     stick.setXChannel(LEFT_STICK_VERTICAL);
     stick.setYChannel(RIGHT_STICK_VERTICAL);
     //Left side needs to be inversed to go forwards, otherwise it will work against the right side. (Robot will spin)
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
+
+    gyro = new I2C(onBoard, gyroAdress);
+    gyro.transaction(new byte[] {0x6B, 0x0}, 2, new byte[] {}, 0);
+    gyro.transaction(new byte[] {0x1B, 0x10},  2, new byte[] {}, 0);
+    System.out.println("debug plz");
   }
 
   /** This function is called periodically during operator control. */
@@ -178,14 +181,12 @@ public class Robot extends TimedRobot {
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
 
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
-    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.3);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)*0.3);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.3);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)*0.3);
     brushElevator.set(RightTriggerOut - LeftTriggerOut);
 
-    //if right bumper is pressed, screw drive goes one direction, if left is pressed, it goes the other.  Otherwise, remain
-    //stationary
     if(stick.getRawButton(RIGHT_BUMPER))
     {
       screwDriveMotor.set(1);
@@ -199,11 +200,11 @@ public class Robot extends TimedRobot {
       screwDriveMotor.set(0);
     }
     
-    
-    //Should probably be replaced with a timer (Accelerometer returns differing values while stationary)
+
     double previousXAccelerometer = accelerometer.getX();
     double previousYAccelerometer = accelerometer.getY();
     double previousZAccelerometer = accelerometer.getZ();
+    //Should probably be replaced with a timer
     if(accelerometer.getX() != previousXAccelerometer)
     {
       System.out.println(accelerometer.getX());
