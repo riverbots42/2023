@@ -24,7 +24,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -68,7 +68,10 @@ public class Robot extends TimedRobot {
   static final double kOffBalanceAngleThresholdDegrees = 10;
   static final double kOonBalanceAngleThresholdDegrees  = 5;
   public double avgAdjustRate = 1;
-  LinkedList<Double> Queue = new LinkedList<Double>();
+  ArrayList<Double> number = new ArrayList<Double>();
+
+  double ltotal = 0;
+  
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -123,12 +126,21 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    double adjustRate = stick.getX();
     double pitchAngleDegrees = navX.getPitch();
     boolean autoBalancePitch = false;
-    
-    
-    Queue.add(pitchAngleDegrees);
+    double pitchAngleRadians = pitchAngleDegrees * (Math.PI / 180.0);
+    ltotal += pitchAngleRadians;
+    number.add(pitchAngleDegrees);
+
+
+
+    if(number.size() > 50)
+    {
+      ltotal -= number.get(0);
+      number.remove(0);
+        
+    }
+    avgAdjustRate = ltotal / 50;
     
     // Check if the pitch angle is more than the set threshold (10 degrees)
     if ( !autoBalancePitch && (Math.abs(pitchAngleDegrees) >= Math.abs(kOffBalanceAngleThresholdDegrees))) 
@@ -142,12 +154,11 @@ public class Robot extends TimedRobot {
     }
     
     if (autoBalancePitch) {
-      double pitchAngleRadians = pitchAngleDegrees * (Math.PI / 180.0);
-      adjustRate = Math.sin(pitchAngleRadians) * -1;
-      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
-      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
-      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
-      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,adjustRate * 0.1);
+      
+      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
+      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
+      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
+      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
     }
   }
 
