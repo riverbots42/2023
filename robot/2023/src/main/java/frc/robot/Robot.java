@@ -18,10 +18,10 @@ import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
 
-//import edu.wpi.first.cameraserver.CameraServer;
-//import edu.wpi.first.cscore.UsbCamera;
-//import edu.wpi.first.networktables.NetworkTableEntry;
-//import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 
 
 import edu.wpi.first.wpilibj.Encoder;
@@ -41,7 +41,7 @@ public class Robot extends TimedRobot {
   VictorSPX rightMotorControllerOne = new VictorSPX(7);
   VictorSPX rightMotorControllerTwo = new VictorSPX(8);
   //PWM channel 0 is broken on our current RoboRio.  Would not recommend trying to use it
-  Spark brushElevator = new Spark(1);
+  Spark brushElevator = new Spark(3);
   Spark screwDriveMotor = new Spark(2);
 
   static final Port onBoard = Port.kOnboard;
@@ -70,12 +70,11 @@ public class Robot extends TimedRobot {
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
 
-  /* 
+  
   UsbCamera parkingCamera;
   UsbCamera leftBackCamera;
   UsbCamera rightBackCamera;
   NetworkTableEntry camera;
- */
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -87,10 +86,10 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
 
-    //camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
-   // parkingCamera = CameraServer.startAutomaticCapture(0);
-   // leftBackCamera = CameraServer.startAutomaticCapture(1);
-   // rightBackCamera = CameraServer.startAutomaticCapture(2);
+    camera = NetworkTableInstance.getDefault().getTable("").getEntry("CameraSelection");
+    parkingCamera = CameraServer.startAutomaticCapture(0);
+    leftBackCamera = CameraServer.startAutomaticCapture(1);
+    rightBackCamera = CameraServer.startAutomaticCapture(2);
 
     //Encoder's distance/pulse
     leftEncoder.setDistancePerPulse(ENCODER_DISTANCE_PER_PULSE);
@@ -132,7 +131,7 @@ public class Robot extends TimedRobot {
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
     ArrayList<Path> pathArray = new ArrayList<Path>();
-    pathArray.add(new Path(200, 200, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathArray.add(new Path(245.745, 245.745, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
     pathElements = pathArray.iterator();
   }
 
@@ -145,7 +144,7 @@ public class Robot extends TimedRobot {
     {
       currentPath = pathElements.next();
     }
-    if(currentPath!=null) 
+    if(currentPath != null) 
     {
       if(currentPath.isDone())
       {
