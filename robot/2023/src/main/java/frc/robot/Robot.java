@@ -69,7 +69,13 @@ public class Robot extends TimedRobot {
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
+  final int NITRO = 3;
 
+  //For pathing, in cm 
+  //MAY NEED FURTHER CALIBRATION
+  final double ROBOT_DISTANCE_FORWARD_PATH_TWO = 60.96;
+  final double ROBOT_DISTANCE_BACKWARD_PATH_TWO = - 91.44;
+  final double ROBOT_TO_PLATFORM_PATH_TWO = 245.745;
   
   UsbCamera parkingCamera;
   UsbCamera leftBackCamera;
@@ -131,8 +137,11 @@ public class Robot extends TimedRobot {
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
     ArrayList<Path> pathArray = new ArrayList<Path>();
-    pathArray.add(new Path(245.745, 245.745, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    pathElements = pathArray.iterator();
+    pathArray.add(new Path (-20, -20, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathArray.add(new Path(ROBOT_DISTANCE_FORWARD_PATH_TWO, ROBOT_DISTANCE_FORWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(ROBOT_DISTANCE_BACKWARD_PATH_TWO, ROBOT_DISTANCE_BACKWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(ROBOT_TO_PLATFORM_PATH_TWO, ROBOT_TO_PLATFORM_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathElements = pathArray.iterator(); 
   }
 
   /** This function is called periodically during autonomous. */
