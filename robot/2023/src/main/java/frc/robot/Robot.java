@@ -63,7 +63,7 @@ public class Robot extends TimedRobot {
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
-  final double ROBOT_SPEED_MULTIPLIER = .6;
+  final double ROBOT_SPEED_MULTIPLIER = .75;
 
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
@@ -73,9 +73,10 @@ public class Robot extends TimedRobot {
 
   //For pathing, in cm 
   //MAY NEED FURTHER CALIBRATION
-  final double ROBOT_DISTANCE_FORWARD_PATH_TWO = 60.96;
-  final double ROBOT_DISTANCE_BACKWARD_PATH_TWO = - 91.44;
-  final double ROBOT_TO_PLATFORM_PATH_TWO = 245.745;
+  //altered to have safer values
+  final double ROBOT_DISTANCE_FORWARD_PATH_TWO = 640/*60.96*/;
+  //final double ROBOT_DISTANCE_BACKWARD_PATH_TWO = - 70/*91.44*/;
+  //final double ROBOT_TO_PLATFORM_PATH_TWO = 640/*245.745*/;
   
   UsbCamera parkingCamera;
   UsbCamera leftBackCamera;
@@ -137,10 +138,9 @@ public class Robot extends TimedRobot {
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
     ArrayList<Path> pathArray = new ArrayList<Path>();
-    pathArray.add(new Path (-20, -20, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
     pathArray.add(new Path(ROBOT_DISTANCE_FORWARD_PATH_TWO, ROBOT_DISTANCE_FORWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-pathArray.add(new Path(ROBOT_DISTANCE_BACKWARD_PATH_TWO, ROBOT_DISTANCE_BACKWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-pathArray.add(new Path(ROBOT_TO_PLATFORM_PATH_TWO, ROBOT_TO_PLATFORM_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    //pathArray.add(new Path(ROBOT_DISTANCE_BACKWARD_PATH_TWO, ROBOT_DISTANCE_BACKWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    //pathArray.add(new Path(ROBOT_TO_PLATFORM_PATH_TWO, ROBOT_TO_PLATFORM_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
     pathElements = pathArray.iterator(); 
   }
 
@@ -181,8 +181,8 @@ pathArray.add(new Path(ROBOT_TO_PLATFORM_PATH_TWO, ROBOT_TO_PLATFORM_PATH_TWO, 0
   @Override
   public void teleopPeriodic() 
   {
-    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER);
-    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER);
+    double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * .50;
+    double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * .50;
 
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
     leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
