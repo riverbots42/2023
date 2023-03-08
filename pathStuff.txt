@@ -1,0 +1,28 @@
+Path 1:
+1. Make right angle turn to the right (width * pi/2 = 135.653970782) and wait 3 seconds
+2. drive forward (274.3581 cm)
+3. make right angle turn to the left (inverse first value)
+4. drive forward (60.96 cm)
+Path 2:
+So robot path should look something like
+1. place robot roughly 1 foot (30.48 cm) away from blue line/edge of scoring mechanism in the middle
+2. drive forward (towards middle of field) 2 feet (60.96 cm) to knock off the cone behind us if we're just putting it on the edge
+3. back up 3 feet (91.44 cm) to push cone closer to scoring area
+4. set speed higher and move the 96.75 inches (245.745 cm) forward to stand on the platform.
+
+Actual pathing:
+
+Path 1:
+pathArray.add(new Path(135.653970782, 0, 3, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(274.3581, 274.3581, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(0, 135.653970782, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(60.96, 60.96, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+Path 2:
+pathArray.add(new Path(ROBOT_DISTANCE_FORWARD_PATH_TWO, ROBOT_DISTANCE_FORWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(ROBOT_DISTANCE_BACKWARD, ROBOT_DISTANCE_BACKWARD, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(ROBOT_TO_PLATFORM, ROBOT_TO_PLATFORM, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+Path 3:
+pathArray.add(new Path(0, 135.653970782, 3, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(274.3581, 274.3581, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(135.653970782, 0, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+pathArray.add(new Path(60.96, 60.96, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
