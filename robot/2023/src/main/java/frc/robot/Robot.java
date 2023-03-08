@@ -63,8 +63,8 @@ public class Robot extends TimedRobot {
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
-  final double ROBOT_SPEED_MULTIPLIER = .75;
-
+  double robotSpeedMultiplier = .75;
+  boolean isTurbo = false;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
@@ -184,11 +184,24 @@ public class Robot extends TimedRobot {
     double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * .50;
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * .50;
 
+    if(stick.getRawButtonPressed(NITRO))
+    {
+      isTurbo = !isTurbo;
+    }
+    if(isTurbo)
+    {
+      robotSpeedMultiplier = 1;
+    }
+    else
+    {
+      robotSpeedMultiplier = 0.75;
+    }
+
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
-    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* robotSpeedMultiplier);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* robotSpeedMultiplier);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* robotSpeedMultiplier);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* robotSpeedMultiplier);
     brushElevator.set(RightTriggerOut - LeftTriggerOut);
 
     //if right bumper is pressed, screw drive goes one direction, if left is pressed, it goes the other.  Otherwise, remain
