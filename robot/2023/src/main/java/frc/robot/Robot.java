@@ -67,7 +67,7 @@ public class Robot extends TimedRobot {
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
-  final int NITRO_BUTTON = 3;
+  final int NITRO_BUTTON_X = 3;
   double robotSpeedMultiplier = .75;
   boolean isTurbo = false;
 
@@ -182,7 +182,7 @@ public class Robot extends TimedRobot {
     double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * .50;
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * .50;
 
-    if(stick.getRawButtonPressed(NITRO_BUTTON))
+    if(stick.getRawButtonPressed(NITRO_BUTTON_X))
     {
       isTurbo = !isTurbo;
     }
@@ -217,7 +217,7 @@ public class Robot extends TimedRobot {
       screwDriveMotor.set(0);
     }
     //Should probably be replaced with a timer (Accelerometer returns differing values while stationary)
-    double previousXAccelerometer = accelerometer.getX();
+    /*double previousXAccelerometer = accelerometer.getX();
     double previousYAccelerometer = accelerometer.getY();
     double previousZAccelerometer = accelerometer.getZ();
     if(accelerometer.getX() != previousXAccelerometer)
@@ -231,7 +231,7 @@ public class Robot extends TimedRobot {
     if(accelerometer.getZ() != previousZAccelerometer)
     {
       System.out.println(accelerometer.getZ());
-    }
+    }*/
   }
   
   @Override
