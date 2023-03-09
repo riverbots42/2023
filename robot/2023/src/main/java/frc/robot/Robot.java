@@ -63,19 +63,17 @@ public class Robot extends TimedRobot {
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
-  double robotSpeedMultiplier = .75;
-  boolean isTurbo = false;
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
-  final int NITRO = 3;
+  final int NITRO_BUTTON = 3;
+  double robotSpeedMultiplier = .75;
+  boolean isTurbo = false;
 
   //For pathing, in cm 
   //MAY NEED FURTHER CALIBRATION
   //altered to have safer values
-  //final double ROBOT_DISTANCE_FORWARD_PATH_TWO = 640/*60.96*/;
-  //final double ROBOT_DISTANCE_BACKWARD_PATH_TWO = - 70/*91.44*/;
   final double ROBOT_TO_PLATFORM_PATH_TWO = 245.745;
   
   UsbCamera parkingCamera;
@@ -184,7 +182,7 @@ public class Robot extends TimedRobot {
     double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * .50;
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * .50;
 
-    if(stick.getRawButtonPressed(NITRO))
+    if(stick.getRawButtonPressed(NITRO_BUTTON))
     {
       isTurbo = !isTurbo;
     }
