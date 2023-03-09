@@ -13,8 +13,8 @@ public class Path{
     double wait;
     VictorSPX leftVictor1, leftVictor2, rightVictor1, rightVictor2;
     Encoder leftEncoder, rightEncoder;
-    final double AUTONOMOUS_ROBOT_SPEED = .3;
-    final double READJUSTMENT_SPEED  = .1;
+    final double AUTONOMOUS_ROBOT_SPEED = .9;
+    final double READJUSTMENT_SPEED  = .3;
 
     public Path(double leftTarget, double rightTarget, double wait, VictorSPX leftVictor1, VictorSPX leftVictor2, VictorSPX rightVictor1, VictorSPX rightVictor2, Encoder leftEncoder, Encoder rightEncoder)
     {
