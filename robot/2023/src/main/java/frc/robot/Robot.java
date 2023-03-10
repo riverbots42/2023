@@ -155,10 +155,10 @@ public class Robot extends TimedRobot {
     
     if (autoBalancePitch) {
       
-      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
-      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
-      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
-      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.1);
+      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
+      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
+      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
+      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
     }
   }
 
