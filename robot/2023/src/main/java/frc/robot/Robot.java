@@ -10,10 +10,10 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.VictorSPXControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import edu.wpi.first.wpilibj.Joystick;
@@ -63,20 +63,20 @@ public class Robot extends TimedRobot {
   
   final int LEFT_STICK_VERTICAL = 1;
   final int RIGHT_STICK_VERTICAL = 5;
-  final double ROBOT_SPEED_MULTIPLIER = .75;
-
   final int LEFT_TRIGGER = 2;
   final int RIGHT_TRIGGER = 3;
   final int LEFT_BUMPER = 5;
   final int RIGHT_BUMPER = 6;
-  final int NITRO = 3;
+  final int BRAKE_BUTTON_B = 2;
+  final int NITRO_BUTTON_X = 3;
+  double robotSpeedMultiplier = .65;
+  boolean isTurbo = false;
 
   //For pathing, in cm 
   //MAY NEED FURTHER CALIBRATION
-  //altered to have safer values
-  final double ROBOT_DISTANCE_FORWARD_PATH_TWO = 640/*60.96*/;
-  //final double ROBOT_DISTANCE_BACKWARD_PATH_TWO = - 70/*91.44*/;
-  //final double ROBOT_TO_PLATFORM_PATH_TWO = 640/*245.745*/;
+  //Is distance from edge of scoring mechanism to middle of charging station +  length of verticle travel on charging station
+  //minus distance from back to middle of robot 
+  final double ROBOT_TO_PLATFORM_PATH_TWO = 244.105;
   
   UsbCamera parkingCamera;
   UsbCamera leftBackCamera;
@@ -138,9 +138,7 @@ public class Robot extends TimedRobot {
     leftMotorControllerOne.setInverted(true);
     leftMotorControllerTwo.setInverted(true);
     ArrayList<Path> pathArray = new ArrayList<Path>();
-    pathArray.add(new Path(ROBOT_DISTANCE_FORWARD_PATH_TWO, ROBOT_DISTANCE_FORWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    //pathArray.add(new Path(ROBOT_DISTANCE_BACKWARD_PATH_TWO, ROBOT_DISTANCE_BACKWARD_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
-    //pathArray.add(new Path(ROBOT_TO_PLATFORM_PATH_TWO, ROBOT_TO_PLATFORM_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
+    pathArray.add(new Path(ROBOT_TO_PLATFORM_PATH_TWO, ROBOT_TO_PLATFORM_PATH_TWO, 0, leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo, leftEncoder, rightEncoder));
     pathElements = pathArray.iterator(); 
   }
 
@@ -183,12 +181,25 @@ public class Robot extends TimedRobot {
   {
     double RightTriggerOut = stick.getRawAxis(RIGHT_TRIGGER) * .50;
     double LeftTriggerOut = stick.getRawAxis(LEFT_TRIGGER) * .50;
-
+    
+    if(stick.getRawButtonPressed(NITRO_BUTTON_X))
+    {
+      isTurbo = !isTurbo;
+    }
+    if(isTurbo)
+    {
+      robotSpeedMultiplier = 1;
+    }
+    else
+    {
+      robotSpeedMultiplier = 0.75;
+    }
+    
     //These all connect to seperate motors and actually control the output.  (Makes wheels, screwdrive, ect, GO)
-    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
-    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* ROBOT_SPEED_MULTIPLIER);
+    leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* robotSpeedMultiplier);
+    leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(LEFT_STICK_VERTICAL)* robotSpeedMultiplier);
+    rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* robotSpeedMultiplier);
+    rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,stick.getRawAxis(RIGHT_STICK_VERTICAL)* robotSpeedMultiplier);
     brushElevator.set(RightTriggerOut - LeftTriggerOut);
 
     //if right bumper is pressed, screw drive goes one direction, if left is pressed, it goes the other.  Otherwise, remain
@@ -205,21 +216,20 @@ public class Robot extends TimedRobot {
     {
       screwDriveMotor.set(0);
     }
-    //Should probably be replaced with a timer (Accelerometer returns differing values while stationary)
-    double previousXAccelerometer = accelerometer.getX();
-    double previousYAccelerometer = accelerometer.getY();
-    double previousZAccelerometer = accelerometer.getZ();
-    if(accelerometer.getX() != previousXAccelerometer)
+ 
+     if(stick.getRawButton(BRAKE_BUTTON_B))
+     {
+      leftMotorControllerOne.setNeutralMode(NeutralMode.Brake);
+      leftMotorControllerTwo.setNeutralMode(NeutralMode.Brake);
+      rightMotorControllerOne.setNeutralMode(NeutralMode.Brake);
+      rightMotorControllerTwo.setNeutralMode(NeutralMode.Brake);
+     }
+    else
     {
-      System.out.println(accelerometer.getX());
-    }
-    if(accelerometer.getY() != previousYAccelerometer)
-    {
-      System.out.println(accelerometer.getY());
-    }
-    if(accelerometer.getZ() != previousZAccelerometer)
-    {
-      System.out.println(accelerometer.getZ());
+      leftMotorControllerOne.setNeutralMode(NeutralMode.Coast);
+      leftMotorControllerTwo.setNeutralMode(NeutralMode.Coast);
+      rightMotorControllerOne.setNeutralMode(NeutralMode.Coast);
+      rightMotorControllerTwo.setNeutralMode(NeutralMode.Coast);
     }
   }
   

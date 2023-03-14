@@ -4,7 +4,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 
 public class Path{
     //these may need to be floats depending on the encoder, I'll just wait and see though
@@ -13,8 +12,8 @@ public class Path{
     double wait;
     VictorSPX leftVictor1, leftVictor2, rightVictor1, rightVictor2;
     Encoder leftEncoder, rightEncoder;
-    final double AUTONOMOUS_ROBOT_SPEED = .3;
-    final double READJUSTMENT_SPEED  = .1;
+    final double AUTONOMOUS_ROBOT_SPEED = .8;
+    final double READJUSTMENT_SPEED  = .6;
 
     public Path(double leftTarget, double rightTarget, double wait, VictorSPX leftVictor1, VictorSPX leftVictor2, VictorSPX rightVictor1, VictorSPX rightVictor2, Encoder leftEncoder, Encoder rightEncoder)
     {
