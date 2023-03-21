@@ -69,7 +69,7 @@ public class Robot extends TimedRobot {
   static final double kOonBalanceAngleThresholdDegrees  = 5;
   public double avgAdjustRate = 1;
   ArrayList<Double> number = new ArrayList<Double>();
-
+  AutoBalance balance = new AutoBalance();
   double ltotal = 0;
   
 
@@ -125,41 +125,11 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {
-    double pitchAngleDegrees = navX.getPitch();
-    boolean autoBalancePitch = false;
-    double pitchAngleRadians = pitchAngleDegrees * (Math.PI / 180.0);
-    ltotal += pitchAngleRadians;
-    number.add(pitchAngleDegrees);
+  public void autonomousPeriodic()
+  {
+    balance.updateList();
+    balance.updateMotor(leftMotorControllerOne, leftMotorControllerTwo, rightMotorControllerOne, rightMotorControllerTwo);
 
-
-
-    if(number.size() > 50)
-    {
-      ltotal -= number.get(0);
-      number.remove(0);
-        
-    }
-    avgAdjustRate = ltotal / 50;
-    
-    // Check if the pitch angle is more than the set threshold (10 degrees)
-    if ( !autoBalancePitch && (Math.abs(pitchAngleDegrees) >= Math.abs(kOffBalanceAngleThresholdDegrees))) 
-    {
-      autoBalancePitch = true;
-    }
-    // Check if it is less than 5 degrees off.
-    else if ( autoBalancePitch && (Math.abs(pitchAngleDegrees) <= Math.abs(kOonBalanceAngleThresholdDegrees))) 
-    {
-      autoBalancePitch = false;
-    }
-    
-    if (autoBalancePitch) {
-      
-      leftMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
-      leftMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
-      rightMotorControllerOne.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
-      rightMotorControllerTwo.set(VictorSPXControlMode.PercentOutput,avgAdjustRate * 0.3);
-    }
   }
 
   @Override
