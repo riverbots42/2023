@@ -56,6 +56,8 @@ public class Robot extends TimedRobot {
   Path currentPath;
   final double ENCODER_DISTANCE_PER_PULSE = 34.29/256.;
 
+  //Added auto balance as "balance" I don't know yet how to integrate balance into Path.
+  AutoBalance balance;
 
   //These constants set axes and channels for the controller. The first two are axes. 
   //On the back of the Logitech controller we use, there is a switch.
@@ -163,6 +165,7 @@ public class Robot extends TimedRobot {
       else
         Stop();
     }
+    
   }
 
   @Override
