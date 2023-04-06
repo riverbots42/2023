@@ -17,7 +17,7 @@
       mode: 0755
       state: directory
   - name: Copy in the docker-compose.yml file.
-    ansible.builtin.copy:
+    ansible.builtin.template:
       src: docker-compose.yml
       dest: /etc/docker/compose/web/docker-compose.yml
   - name: Copy in the docker-compose config for systemd so we can start the service.

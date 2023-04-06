@@ -15,3 +15,5 @@ services:
     image: "riverbots42/love"
     ports:
       - "80:8080"
+    environment:
+      - PASSPHRASE={{ passphrase }}
