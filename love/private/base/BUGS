@@ -1,9 +1,3 @@
-Current:
-
-* Need to add the printer code.
-
-Resolved:
-
-* Need to remove and rekey keys.json because they were accidentally checked
-  into git.
-* Need to remove 'lab.riverbots.org' from /etc/hosts (new playbook, presumably).
+Need to add a second dedicated WiFi adapter, as the WiFi we have requires that the
+AP and station channel be the same and the OpenMesh WiFi keeps changing AP channels
+on us.

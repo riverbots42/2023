@@ -4,7 +4,7 @@
 
 The lab/printer station has two main functions:
 
-1. It acts as a BATMAN-to-Internet gateway via wifi, so a laptop can talk
+1. It acts as a Local Network-to-Internet gateway via wifi, so a laptop can talk
    to both the robot and the Internet simultaneously.
 
 2. It acts as a print server for the label printer, running a website so you
@@ -57,3 +57,56 @@ around for the password or revert to an older version of the file.
 Hopefully you'll never need to update keys.json, but if you do make sure to
 run `make encrypt` with the correct password and then check in the resulting
 keys.json.enc
+
+## Deployment
+
+To deploy, you'll need:
+
+    1. A copy of make installed somewhere in the PATH (either Windows, MacOS, or Linux).
+    2. A copy of ansible installed.
+    3. The super-secret password we use everywhere.
+    4. Your sudo password.
+
+To deploy, just type "make".  A successful run looks like this:
+
+```
+bj@simulator:~/2023/love/private/base$ make
+echo Decrypting keys.json.enc...
+Decrypting keys.json.enc...
+enter AES-256-CBC decryption password:       <-- Enter the super-secret password here.
+make validate
+make[1]: Entering directory '/home/bj/2023/love/private/base'
+Validating keys.json...
+Success!
+make[1]: Leaving directory '/home/bj/2023/love/private/base'
+ansible-playbook -e @keys.json --ask-become-pass -i inventory 01-packages.yml 02-network-interfaces.yml 03-dynamic-dns.yml 04-vpn.yml 05-robot-packet-mangler.yml
+BECOME password:                             <-- Enter your sudo password here.
+
+PLAY [all] *************************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [lab.riverbots.org]
+
+TASK [Install base useful packages] ************************************************************************************************
+ok: [lab.riverbots.org]
+
+PLAY RECAP *************************************************************************************************************************
+lab.riverbots.org          : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+
+PLAY [Configure network interfaces with correct names and WAN MAC.] ****************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [lab.riverbots.org]
+
+TASK [Copy over the network interface autoconfig script.] **************************************************************************
+ok: [lab.riverbots.org]
+
+[...]
+
+TASK [Enable the Robot Communication Manager service.] *****************************************************************************
+changed: [lab.riverbots.org]
+
+PLAY RECAP *************************************************************************************************************************
+lab.riverbots.org          : ok=20   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
