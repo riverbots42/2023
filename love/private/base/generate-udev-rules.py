@@ -137,16 +137,16 @@ def get_interface_rules():
     return "\n".join(rules)
 
 if __name__ == "__main__":
+    rules = get_interface_rules()
+    with open("/etc/udev/rules.d/70-persistent-net.rules", "w") as fd:
+        fd.write(rules)
+        fd.write("\n")
     try:
         os.stat("/sys/class/net/wan")
         os.stat("/sys/class/net/lan")
         os.stat("/sys/class/net/wifi-ap")
         os.stat("/sys/class/net/wifi-bot")
     except:
-        rules = get_interface_rules()
-        with open("/etc/udev/rules.d/70-persistent-net.rules", "w") as fd:
-            fd.write(rules)
-            fd.write("\n")
         print("/etc/udev/rules.d/70-persistent-net.rules created.  Rebooting to commit in 5 mins...")
         proc = subprocess.Popen(["systemd-run", "--on-active=5min", "/sbin/reboot"], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
