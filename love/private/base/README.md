@@ -79,7 +79,7 @@ make[1]: Entering directory '/home/bj/2023/love/private/base'
 Validating keys.json...
 Success!
 make[1]: Leaving directory '/home/bj/2023/love/private/base'
-ansible-playbook -e @keys.json --ask-become-pass -i inventory 01-packages.yml 02-network-interfaces.yml 03-dynamic-dns.yml 04-vpn.yml 05-robot-packet-mangler.yml
+ansible-playbook -e @keys.json --ask-become-pass -i inventory 01-packages.yml 02-network-interfaces.yml 03-dynamic-dns.yml 04-vpn.yml
 BECOME password:                             <-- Enter your sudo password here.
 
 PLAY [all] *************************************************************************************************************************
