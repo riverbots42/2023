@@ -3,4 +3,4 @@
 # "lab.riverbots.org" and put in the IP it currently has.
 lab.riverbots.org  # If this has run once already, then you can just use the
                    # name version of lab.riverbots.org.
-#192.168.1.26    # Uncomment and replace if needed
+#10.68.0.3    # Uncomment and replace if needed

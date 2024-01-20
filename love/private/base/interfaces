@@ -1,5 +1,5 @@
 #
-# {{ ansible_warning }}
+# # File automatically updated by Ansible; DO NOT EDIT #
 #
 # This configuration file sets up all the IP addresses and NAT and forwarding
 # translations.  Basically it sets up the core of the network at layer 3 (i.e.
@@ -23,22 +23,15 @@ iface lan inet static
 	up iptables -t nat -F POSTROUTING
 	up iptables -t nat -A POSTROUTING -o wan -j MASQUERADE
 
-auto wifi
-iface wifi inet manual
-	up iw dev wifi interface add wifi_ap type managed
-	up ip link set wifi_ap address 00:07:ef:be:ef:fd
-	up iw dev wifi interface add wifi_sta type managed
-	up ip link set wifi_sta address 00:07:ef:be:ef:fe
-
-auto wifi_ap
-iface wifi_ap inet static
+auto wifi-ap
+iface wifi-ap inet static
 	address 10.68.2.1
 	netmask 255.255.255.0
 
-auto wifi_sta
-iface wifi_sta inet static
+auto wifi-bot
+iface wifi-bot inet static
 	address 10.68.45.3
 	netmask 255.255.255.0
-	up ip link set wifi_sta up
-	up iw dev wifi_sta connect 6845_Lovekesh
-	up iptables -t nat -A POSTROUTING -o wifi_sta -j MASQUERADE
+	up ip link set wifi_bot up
+	up iw dev wifi_bot connect 6845_Lovekesh
+	up iptables -t nat -A POSTROUTING -o wifi_bot -j MASQUERADE

@@ -5,7 +5,6 @@ push:	$(PLAYBOOKS)
 	ansible-playbook --ask-become-pass -i ../base/inventory $(PLAYBOOKS)
 
 docker:
-	$(MAKE) love.properties
 	docker build -t riverbots42/love:latest .
 	docker login
 	docker push riverbots42/love:latest
