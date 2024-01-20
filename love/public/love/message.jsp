@@ -18,7 +18,7 @@
 	Class.forName("com.mysql.jdbc.Driver");
 	Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/love", "love", props.getProperty("password"));
 	// Construct the SQL string to get the message sender/recipient/body
-	PreparedStatement stmt = con.prepareStatement("select sender, recipient, body from message where code=?");
+	PreparedStatement stmt = con.prepareStatement("select sender, recipient, body, year from message where code=?");
 	stmt.setString(1, code);
 	ResultSet result = stmt.executeQuery();
 	result.next();
@@ -28,5 +28,6 @@
 	o.put("sender", result.getString(1));
 	o.put("recipient", result.getString(2));
 	o.put("body", result.getString(3));
+	o.put("year", new Integer(result.getInt(4)));
 	out.print(o.toJSONString());
 %>

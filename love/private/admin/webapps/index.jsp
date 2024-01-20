@@ -72,7 +72,7 @@ public String makeItem(String name, String value, int length, String label, Stri
  *
  * OUT: the resulting form HTML content.
 **/
-public String form(String name, String buttontext, String fields[]) {
+public String form(String name, String buttontext, String fields[], Integer year) {
     StringWriter out = new StringWriter();
     PrintWriter ret = new PrintWriter(out);
     ret.printf("<!-- BEGIN form %s -->\n", name);
@@ -80,6 +80,7 @@ public String form(String name, String buttontext, String fields[]) {
     for( int i=0; i<fields.length; i++ ) {
         ret.print(fields[i]);
     }
+    ret.printf("  <input type=\"hidden\" name=\"year\" value=\"%d\" />\n", year.intValue());
     ret.printf("  <button type=\"submit\" class=\"btn btn-primary\">%s</button>\n", buttontext);
     ret.printf("</form>\n");
     ret.printf("<!-- END form %s -->\n", name);
@@ -94,13 +95,13 @@ public String form(String name, String buttontext, String fields[]) {
  *
  * OUT: the resulting form HTML content.
 **/
-public String blankForm() {
+public String blankForm(Integer year) {
     String items[] = new String[4];
     items[0] = makeItem("sender", null, 50, "Sender", "Joe Sender", "The person who ordered this message.");
     items[1] = makeItem("recipient", null, 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
     items[2] = makeItem("body", null, 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
     items[3] = makeItem("notes", null, 200, "Notes", "Room/Class Notes", "Any notes for this message delivery (not printed).");
-    return form("blank", "Create", items);
+    return form("blank", "Create", items, year);
 }
 
 /**
@@ -111,7 +112,7 @@ public String blankForm() {
  *
  * OUT: the resulting form HTML content.
 **/
-public String editForm(Connection conn, String code) {
+public String editForm(Connection conn, String code, Integer year) {
     String csrbn[] = doSelect(conn, code);
     if(csrbn == null) {
         return "<p>Error: Couldn't get record for code " + code + "</p>\n";
@@ -122,7 +123,7 @@ public String editForm(Connection conn, String code) {
     items[2] = makeItem("recipient", csrbn[2], 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
     items[3] = makeItem("body", csrbn[3], 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
     items[4] = makeItem("notes", csrbn[4], 200, "Notes", "Delivery notes", "Room/Class Delivery notes (not printed).");
-    return form("update", "Update", items);
+    return form("update", "Update", items, year);
 }
 
 /**
@@ -136,7 +137,7 @@ public String editForm(Connection conn, String code) {
  *
  * OUT: the resulting form HTML content.
 **/
-public String confirmForm(Connection conn, String code) {
+public String confirmForm(Connection conn, String code, Integer year) {
     String csrbn[] = doSelect(conn, code);
     if(csrbn == null) {
         return "<p>Error: Couldn't get record for code " + code + "</p>\n";
@@ -148,7 +149,7 @@ public String confirmForm(Connection conn, String code) {
     items[3] = makeItem("body", csrbn[3], 0, "Message", null, null);
     items[4] = makeItem("body", csrbn[4], 0, "Notes", null, null);
     items[5] = "<input type=\"hidden\" name=\"delete\" value=\"confirm\">";
-    return form("delete confirm", "Delete", items);
+    return form("delete confirm", "Delete", items, year);
 }
 
 /**
@@ -183,13 +184,14 @@ public String generateCode() {
  * IN: recipient: The receipient of the message after the change.
  * IN: body:      The message send after the change.
  * IN: notes:     Notes to the entry (not printed).
+ * IN: year:      Year of the entry (not printed).
  *
  * OUT: nothing
  *
  * Side effect: Could throw a SQLException.
 **/
-public void audit(Connection conn, String username, String action, String code, String sender, String recipient, String body, String notes) throws SQLException {
-    PreparedStatement stmt = conn.prepareStatement( "INSERT INTO audit (user, action, code, sender, recipient, body, notes) VALUES (?, ?, ?, ?, ?, ?, ?)" );
+public void audit(Connection conn, String username, String action, String code, String sender, String recipient, String body, String notes, int year) throws SQLException {
+    PreparedStatement stmt = conn.prepareStatement( "INSERT INTO audit (user, action, code, sender, recipient, body, notes, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)" );
     stmt.setString(1, username);
     stmt.setString(2, action);
     stmt.setString(3, code);
@@ -197,6 +199,7 @@ public void audit(Connection conn, String username, String action, String code, 
     stmt.setString(5, recipient);
     stmt.setString(6, body);
     stmt.setString(7, notes);
+    stmt.setString(8, year);
     stmt.executeUpdate();
 }
 
@@ -254,13 +257,14 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
     // times, just in case.
     while(attempts_remaining > 0 && code == null) {
         try {
-            PreparedStatement stmt = conn.prepareStatement( "INSERT INTO message (code, sender, recipient, body, notes) VALUES (?, ?, ?, ?, ?)" );
+            PreparedStatement stmt = conn.prepareStatement( "INSERT INTO message (code, sender, recipient, body, notes, year) VALUES (?, ?, ?, ?, ?, ?)" );
             code = generateCode();
             stmt.setString(1, code);
             stmt.setString(2, sender);
             stmt.setString(3, recipient);
             stmt.setString(4, body);
             stmt.setString(5, notes);
+            stmt.setString(6, year.intValue());
             stmt.executeUpdate();
         } catch(SQLException e) {
             attempts_remaining--;
@@ -405,13 +409,23 @@ String delete = request.getParameter("delete");
 String form = null;
 String title = null;
 
+String yearStr = request.getParameter("year");
+Integer year = new Integer(Calendar.getInstance().get(Calendar.YEAR));
+if( yearStr != null ) {
+    try {
+        year = new Integer(yearStr);
+    } catch(NumberFormatException E) {
+        // Do nothing; we got a bogus year, so default back to the current year.
+    }
+}
+
 if( code == null && sender == null && recipient == null && body == null && delete == null ) {
     // Case 1: Display a blank form.
-    form = blankForm();
+    form = blankForm(year);
     title = "Create Message";
 } else if( code != null && !code.equals("") && sender == null && recipient == null && body == null && notes == null && delete == null ) {
     // Case 2: Display a form with the bits to edit.
-    form = editForm(conn, code);
+    form = editForm(conn, code, year);
     title = "Edit Message";
 } else if( code == null && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 3: Run the insert and redirect.
@@ -423,7 +437,7 @@ if( code == null && sender == null && recipient == null && body == null && delet
     return;
 } else if( code != null && !code.equals("") && delete != null && delete.equals("ask") ) {
     // Case 5: Display the confirmation form (to confirm that we really want to delete).
-    form = confirmForm(conn, code);
+    form = confirmForm(conn, code, year);
     title = "Confirm Delete";
 } else if( code != null && !code.equals("") && delete != null && delete.equals("confirm") ) {
     // Case 6: We got confirmation to delete the entry, so run the delete and redirect.
@@ -447,7 +461,7 @@ if( code == null && sender == null && recipient == null && body == null && delet
         <h1><%=title%></h1>
 <%=form%>
         <!-- START List of All Messages -->
-        <h1>All Messages</h1>
+        <h1>All Messages for <%=year.toString()%></h1>
         <table class="table">
             <tr>
                 <th scope="col">Code</th>
@@ -460,10 +474,12 @@ if( code == null && sender == null && recipient == null && body == null && delet
 <%
 PreparedStatement stmt;
 if( code != null && !code.equals("") ) {
-    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message WHERE code != ? ORDER BY code");
-    stmt.setString(1, code);
+    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message WHERE year = ? AND code != ? ORDER BY code");
+    stmt.setInt(1, year.intValue());
+    stmt.setString(2, code);
 } else {
-    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message ORDER BY code");
+    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message WHERE year = ? ORDER BY code");
+    stmt.setInt(1, year.intValue());
 }
 ResultSet result = stmt.executeQuery();
 while(result.next()) {
