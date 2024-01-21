@@ -6,6 +6,9 @@
 <%@ page import="java.util.*" %>
 <%@ page import="org.apache.commons.lang3.*" %>
 <%!
+// The first year this thing's in use.
+public final int FIRST_YEAR = 2023;
+
 // BEGIN SHARED FUNCTION DEFININTIONS
 
 /**
@@ -18,6 +21,31 @@
  *    update form (filled), or a delete form (filled but not editable).
  * 4. The list of all the messages we know about.
 **/
+
+/**
+ * Make a SELECT element with all the years we care about (i.e. 2023 to now).
+ *
+ * IN: year:  The selected year as an Integer.
+ *
+ * OUT: the resulting SELECT html
+**/
+public String makeYearSelect(Integer current) {
+	int maxYear = Calendar.getInstance().get(Calendar.YEAR);
+	StringBuilder sb = new StringBuilder("<select id=\"year\" name=\"year\">");
+	for( int i=FIRST_YEAR; i<=maxYear; i++) {
+		sb.append("<option value=\"");
+		sb.append(new Integer(i).toString());
+		sb.append("\"");
+		if( (current == null && i == maxYear) || (current != null && i == current.intValue()) ) {
+		    sb.append(" selected");
+		}
+		sb.append(">");
+		sb.append(new Integer(i).toString());
+		sb.append("</option>");
+    	}
+	sb.append("</select>");
+	return sb.toString();
+}
 
 /**
  * Create one form item, either a normal text field with labels and
@@ -199,7 +227,7 @@ public void audit(Connection conn, String username, String action, String code, 
     stmt.setString(5, recipient);
     stmt.setString(6, body);
     stmt.setString(7, notes);
-    stmt.setString(8, year);
+    stmt.setInt(8, year);
     stmt.executeUpdate();
 }
 
@@ -250,7 +278,7 @@ public String[] doSelect(Connection conn, String code) {
  * Side Effects: redirects the page to edit the message just inserted, adds an
  *               entry to the audit table.  Could throw SQLException.
 **/
-public void doInsert(HttpServletResponse response, Connection conn, String username, String sender, String recipient, String body, String notes) throws IOException {
+public void doInsert(HttpServletResponse response, Connection conn, String username, String sender, String recipient, String body, String notes, Integer year) throws IOException {
     String code = null;
     int attempts_remaining = 10;
     // Since we *could* potentially get duplicate codes, we retry a bunch of
@@ -264,7 +292,7 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
             stmt.setString(3, recipient);
             stmt.setString(4, body);
             stmt.setString(5, notes);
-            stmt.setString(6, year.intValue());
+            stmt.setInt(6, year.intValue());
             stmt.executeUpdate();
         } catch(SQLException e) {
             attempts_remaining--;
@@ -275,7 +303,7 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
         // We ran OK, so add an audit entry and redirect to the item we just
         // created.
         try {
-            audit(conn, username, "insert", code, sender, recipient, body, notes);
+            audit(conn, username, "insert", code, sender, recipient, body, notes, year);
         } catch(SQLException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
             return;
@@ -304,16 +332,17 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
  * Side Effects: redirects the page to he message just inserted, adds an
  *               entry to the audit table.  Could throw SQLException.
 **/
-public void doUpdate(HttpServletResponse response, Connection conn, String username, String code, String sender, String recipient, String body, String notes) throws SQLException, IOException {
-    PreparedStatement stmt = conn.prepareStatement("UPDATE message SET sender=?, recipient=?, body=?, notes=? where code=?");
+public void doUpdate(HttpServletResponse response, Connection conn, String username, String code, String sender, String recipient, String body, String notes, Integer year) throws SQLException, IOException {
+    PreparedStatement stmt = conn.prepareStatement("UPDATE message SET sender=?, recipient=?, body=?, notes=?, year=? where code=?");
     stmt.setString(1, sender);
     stmt.setString(2, recipient);
     stmt.setString(3, body);
     stmt.setString(4, notes);
-    stmt.setString(5, code);
+    stmt.setInt(5, year.intValue());
+    stmt.setString(6, code);
     stmt.executeUpdate();
     try {
-        audit(conn, username, "update", code, sender, recipient, body, notes);
+        audit(conn, username, "update", code, sender, recipient, body, notes, year);
     } catch(SQLException e) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
         return;
@@ -340,7 +369,7 @@ public void doDelete(HttpServletResponse response, Connection conn, String usern
     stmt.setString(1, code);
     stmt.executeUpdate();
     try {
-        audit(conn, username, "delete", code, "", "", "", "");
+        audit(conn, username, "delete", code, "", "", "", "", -1);
     } catch(SQLException e) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
         return;
@@ -357,7 +386,7 @@ public void doDelete(HttpServletResponse response, Connection conn, String usern
 // Start by loading the password that we're expecting to get from the user
 // (and with which we'll be connecting to the database).
 Properties props = new Properties();
-props.load(new FileInputStream(request.getRealPath("META-INF/love.properties")));
+props.load(new FileInputStream(request.getRealPath("WEB-INF/love.properties")));
 
 // Now make sure the user has authorization to load this page.  If there's
 // no auth, send an HTTP 401 and require a password.
@@ -429,11 +458,11 @@ if( code == null && sender == null && recipient == null && body == null && delet
     title = "Edit Message";
 } else if( code == null && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 3: Run the insert and redirect.
-    doInsert(response, conn, username, sender, recipient, body, notes);
+    doInsert(response, conn, username, sender, recipient, body, notes, year);
     return;
 } else if( code != null && !code.equals("") && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 4: Run the update and redirect.
-    doUpdate(response, conn, username, code, sender, recipient, body, notes);
+    doUpdate(response, conn, username, code, sender, recipient, body, notes, year);
     return;
 } else if( code != null && !code.equals("") && delete != null && delete.equals("ask") ) {
     // Case 5: Display the confirmation form (to confirm that we really want to delete).
@@ -462,7 +491,7 @@ if( code == null && sender == null && recipient == null && body == null && delet
 		<p><a href="//lab.riverbots.org:8080/">Print Custom Stickers</a></p>
 <%=form%>
         <!-- START List of All Messages -->
-        <h1>All Messages for <%=year.toString()%></h1>
+        <h1>All Messages for <%=makeYearSelect(year)%></h1>
         <table class="table">
             <tr>
                 <th scope="col">Code</th>
@@ -511,9 +540,14 @@ result.close();
         <!-- END List of All Messages -->
     </body>
     <script>
-        $(document).ready($(".printer").on("click", function() {
-             $.get("sticker.jsp?toprinter=yes&code=" + this.id);
-        }));
+	$(document).ready(function() {
+            $(".printer").on("click", function() {
+                $.get("sticker.jsp?toprinter=yes&code=" + this.id);
+            });
+	    $("#year").on("change", function() {
+                window.location = "index.jsp?year=" + $("#year").val();
+	    });
+        });
     </script>
 </html>
 <%

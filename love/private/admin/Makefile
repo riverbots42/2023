@@ -6,6 +6,9 @@ push:	$(PLAYBOOKS)
 
 docker:
 	docker build -t riverbots42/love:latest .
+
+docker-push:
+	$(MAKE) docker
 	docker login
 	docker push riverbots42/love:latest
 
