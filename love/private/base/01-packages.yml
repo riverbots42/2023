@@ -9,10 +9,13 @@
   - name: Install base useful packages
     apt:
       name:
+        - build-essential
         - ddclient
+        - dkms
         - dnsmasq
         - docker
         - docker-compose
+        - git
         - hostapd
         - iw
         - less
@@ -22,3 +25,48 @@
         - vim
         - wireguard
       state: latest
+      update_cache: true
+  - name: Prep /src for DKMS for Realtek Driver
+    file:
+      path: /src
+      owner: root
+      group: root
+      state: directory
+
+  - name: See If the Realtek Driver Sources Are Already Present
+    stat:
+      path: /src/rtl8812au
+    register: realtek
+
+  - name: Download Sources for Realtek Driver
+    shell: git clone https://github.com/aircrack-ng/rtl8812au.git
+    args:
+      chdir: /src
+    when: not realtek.stat.exists
+
+  - name: See if DKMS Driver is Added Already
+    shell: dkms status | grep -q realtek
+    register: dkms_status
+    ignore_errors: yes
+
+  - name: Add DKMS Driver for Realtek USB Wifi
+    shell: dkms add /src/rtl8812au
+    when: dkms_status.rc != 0
+
+  - name: See if DKMS Driver is Built Already
+    shell: modinfo 88XXau
+    register: dkms_built
+    ignore_errors: yes
+
+  - name: Install DKMS Driver for Realtek USB Wifi
+    shell: dkms autoinstall
+    when: dkms_built.rc != 0
+
+  - name: See if DKMS Driver is Loaded Already
+    shell: lsmod | grep -q 88XXau
+    register: dkms_loaded
+    ignore_errors: yes
+
+  - name: Reboot After Loading DKMS Driver If Needed
+    shell: reboot && sleep 60
+    when: dkms_loaded.rc != 0

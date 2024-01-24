@@ -37,11 +37,17 @@ def get_device(intf):
     )
     sout, serr = proc.communicate()
     kernels = None
+    drivers = None
     kernre = re.compile(r'^\s*KERNELS\s*==\s*(\S+)')
+    driverre = re.compile(r'^\s*DRIVERS\s*==\s*(\S+)')
     for line in sout.decode("utf-8").split("\n"):
         matches = kernre.search(line)
         if matches is not None:
             kernels = matches.group(1)
+        matches = driverre.search(line)
+        if matches is not None:
+            drivers = matches.group(1)
+        if kernels is not None and drivers is not None:
             break
     is_wifi = False
     try:
@@ -51,9 +57,9 @@ def get_device(intf):
         # Not a wifi adapter.
         is_wifi = False
 
-    if kernels is None:
-        return None
-    return kernels, is_wifi
+    if kernels is None or drivers is None:
+        return None, None, False
+    return kernels.replace("\"", ""), drivers.replace("\"", ""), is_wifi
 
 def get_wan_intf():
     """
@@ -82,25 +88,31 @@ def get_interface_map():
     interfaces = {
         "wan": None,
         "lan": None,
-        "wifi": None,
+        "wifi-ap": None,
+        "wifi-bot": None,
     }
     for d in glob.glob("/sys/class/net/*"):
         intf = d.split("/")[-1]
         print("Considering interface %s..." % intf, end="")
-        kernels, is_wifi = get_device(intf) or (None, None)
+        kernels, drivers, is_wifi = get_device(intf) or (None, None, False)
         if kernels is None:
             print("  Not an ethernet or WiFi interface.")
             continue
         if is_wifi:
-            print("  Is a WiFi interface.")
-            interfaces["wifi"] = kernels
+            print("  Is a WiFi interface: ", end="")
+            if drivers == "ath9k":
+                print("AP")
+                interfaces["wifi-ap"] = drivers
+            else:
+                print("Station")
+                interfaces["wifi-bot"] = drivers
         elif wanintf == intf:
             print("  Is a WAN interface.")
             interfaces["wan"] = kernels
         else:
             print("  Is a LAN interface.")
             interfaces["lan"] = kernels
-    if interfaces["wan"] is not None and interfaces["lan"] is not None and interfaces["wifi"] is not None:
+    if interfaces["wan"] is not None and interfaces["lan"] is not None and interfaces["wifi-ap"] is not None:
         return interfaces
     else:
         return None
@@ -115,23 +127,26 @@ def get_interface_rules():
     rules.append("# the ansible playbook 'network.yml'.  See the Riverbots")
     rules.append("# 2023/love repo for more info.")
     rules.append("")
-    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==%s, NAME=\"wan\"" % interfaces["wan"])
-    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==%s, PROGRAM=\"/sbin/ip link set %%k address %s\"" % (interfaces["wan"], make_mac()))
-    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==%s, NAME=\"lan\"" % interfaces["lan"])
-    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==%s, NAME=\"wifi\"" % interfaces["wifi"])
+    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", NAME=\"wan\"" % interfaces["wan"])
+    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", PROGRAM=\"/sbin/ip link set %%k address %s\"" % (interfaces["wan"], make_mac()))
+    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", NAME=\"lan\"" % interfaces["lan"])
+    if interfaces["wifi-ap"] is not None:
+        rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"%s\", NAME=\"wifi-ap\"" % interfaces["wifi-ap"])
+    if interfaces["wifi-bot"] is not None:
+        rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"%s\", NAME=\"wifi-bot\"" % interfaces["wifi-bot"])
     return "\n".join(rules)
 
 if __name__ == "__main__":
-    found_all = False
+    rules = get_interface_rules()
+    with open("/etc/udev/rules.d/70-persistent-net.rules", "w") as fd:
+        fd.write(rules)
+        fd.write("\n")
     try:
         os.stat("/sys/class/net/wan")
         os.stat("/sys/class/net/lan")
-        os.stat("/sys/class/net/wifi")
+        os.stat("/sys/class/net/wifi-ap")
+        os.stat("/sys/class/net/wifi-bot")
     except:
-        rules = get_interface_rules()
-        with open("/etc/udev/rules.d/70-persistent-net.rules", "w") as fd:
-            fd.write(rules)
-            fd.write("\n")
         print("/etc/udev/rules.d/70-persistent-net.rules created.  Rebooting to commit in 5 mins...")
         proc = subprocess.Popen(["systemd-run", "--on-active=5min", "/sbin/reboot"], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
