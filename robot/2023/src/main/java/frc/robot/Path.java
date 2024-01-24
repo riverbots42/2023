@@ -14,6 +14,8 @@ public class Path{
     Encoder leftEncoder, rightEncoder;
     final double AUTONOMOUS_ROBOT_SPEED = .8;
     final double READJUSTMENT_SPEED  = .6;
+    final double FAR = .5;
+    final double CLOSE = .3;
 
     public Path(double leftTarget, double rightTarget, double wait, VictorSPX leftVictor1, VictorSPX leftVictor2, VictorSPX rightVictor1, VictorSPX rightVictor2, Encoder leftEncoder, Encoder rightEncoder)
     {
@@ -45,49 +47,49 @@ public class Path{
             leftVictor1.set(ControlMode.PercentOutput, - AUTONOMOUS_ROBOT_SPEED);
             leftVictor2.set(ControlMode.PercentOutput, - AUTONOMOUS_ROBOT_SPEED);
         } 
-        else if(curLeft - leftTarget > +0.5) 
+        else if(curLeft - leftTarget > + FAR) 
         {
             // leftTarget is negative
             // We have a long way to go to get to leftTarget (leftTarget << curLeft)
             leftVictor1.set(ControlMode.PercentOutput, + AUTONOMOUS_ROBOT_SPEED);
             leftVictor2.set(ControlMode.PercentOutput, + AUTONOMOUS_ROBOT_SPEED);
         } 
-        else if(curLeft - leftTarget < -0.1 ) 
+        else if(curLeft - leftTarget < - CLOSE) 
         {
             // leftTarget is positive, but we're close
             // We have a short way to go to get to leftTarget (leftTarget > curLeft)
             leftVictor1.set(ControlMode.PercentOutput, - READJUSTMENT_SPEED);
             leftVictor2.set(ControlMode.PercentOutput, - READJUSTMENT_SPEED);
         } 
-        else if(curLeft - leftTarget > +0.1) 
+        else if(curLeft - leftTarget > + CLOSE) 
         {
             // leftTarget is negative
             // We have a short way to go to get to leftTarget (leftTarget < curLeft)
             leftVictor1.set(ControlMode.PercentOutput, + READJUSTMENT_SPEED);
             leftVictor2.set(ControlMode.PercentOutput, + READJUSTMENT_SPEED);
         }
-        if(curRight - rightTarget < -0.5) 
+        if(curRight - rightTarget < - FAR) 
         {
             // rightTarget is positive
             // We have a long way to go to get to rightTarget (rightTarget >> curRight)
             rightVictor1.set(ControlMode.PercentOutput, - AUTONOMOUS_ROBOT_SPEED);
             rightVictor2.set(ControlMode.PercentOutput, - AUTONOMOUS_ROBOT_SPEED);
         } 
-        else if(curRight - rightTarget > +0.5) 
+        else if(curRight - rightTarget > + FAR) 
         {
             // rightTarget is negative
             // We have a long way to go to get to rightTarget (rightTarget << curRight)
             rightVictor1.set(ControlMode.PercentOutput, + AUTONOMOUS_ROBOT_SPEED);
             rightVictor2.set(ControlMode.PercentOutput, + AUTONOMOUS_ROBOT_SPEED);
         } 
-        else if(curRight - rightTarget < -0.1 ) 
+        else if(curRight - rightTarget < - CLOSE) 
         {
             // rightTarget is positive, but we're close
             // We have a short way to go to get to rightTarget (rightTarget > curRight)
             rightVictor1.set(ControlMode.PercentOutput, - READJUSTMENT_SPEED);
             rightVictor2.set(ControlMode.PercentOutput, - READJUSTMENT_SPEED);
         } 
-        else if(curRight - rightTarget > +0.1) 
+        else if(curRight - rightTarget > + CLOSE) 
         {
             // rightTarget is negative
             // We have a short way to go to get to rightTarget (rightTarget < curRight)
