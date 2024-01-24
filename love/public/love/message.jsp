@@ -1,6 +1,6 @@
 <%
 // Simple page to load the message from the database and return it as a JSON blob.
-%/
+%>
 <%@ page language="java" contentType="application/json; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ page import="java.io.*" %>
