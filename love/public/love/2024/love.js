@@ -13,7 +13,7 @@
 
 // lines_to_print consists of a number of lines (which get consumed as a queue).
 // Strings are printed to the content element; numbers are pauses (in ms).
-var lines_to_print = ["RiverbotOS 1.2 Booting...", 2000, "Connecting to Lovebot&trade; Server...", 4000];
+var lines_to_print = ["RiverbotOS 2.0.1 Booting...", 2000, "Connecting to Lovebot&trade; Server...", 4000];
 
 // How long to delay between printing chars onscreen.
 var delay_between_chars = 50;
@@ -27,7 +27,9 @@ function tick() {
     // shift() has the side effect that line is removed from the array.
     // We *may* add it back if it's not done processing yet.
     line = lines_to_print.shift();
-    if (typeof(line) == "number") {
+    if( typeof(line) == "function" ) {
+        line();
+    } else if (typeof(line) == "number") {
         // We're in the middle of a pause.  Decrement the counter.
         line -= delay_between_chars;
         if (line <= 0) {
@@ -72,16 +74,31 @@ function tick() {
 }
 
 // index_init is run on document ready for the main index page.
+//
+// If the user has already interacted with the page, or if the play button is pressed, go to play_index().
+function index_init(code) {
+    if(!navigator.userActivation.hasBeenActive) {
+        // when the user clicks the play button, hide the coverbox.
+        $("#play").click(function() {
+            $.get("poke.jsp");
+            play_index(code);
+        });
+    } else {
+        play_index(code);
+    }
+}
+
+// play_index is run when the play button has been pressed.
+//
 // A few callbacks:
 // - the play button has a click event to hide the coverbox when clicked.
 // - there's a 50ms interval that types out characters on the simulated
 //   terminal.
 // - there's a 500ms blinker for the simulated cursor
-function index_init(code) {
-    // when the user clicks the play button, hide the coverbox.
-    $("#play").click(function() {
-        $("#coverbox").hide();
-    });
+function play_index(code) {
+    $("#cover_box").hide();
+
+    resize();
 
     // set the cursor off at first.
     cursor = false;
@@ -104,9 +121,11 @@ function index_init(code) {
 
     // After 4 secs, try the AJAX call to get the message for this code.
     setTimeout(() => {
-        $.get("message.jsp?code=" + code, function(data) {
-            $("#player")[0].start();
-            lines_to_print.push("", 1000);
+        $.get("../message.jsp?code=" + code, function(data) {
+            lines_to_print.push(function() {
+                $("#message").text("");
+                $("#player")[0].play();
+	    });
             lines_to_print.push("From:&nbsp;&nbsp;&nbsp;&nbsp;" + data["sender"], 2000);
             lines_to_print.push("To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + data["recipient"], 2000);
             lines_to_print.push("", 1000);
@@ -117,93 +136,49 @@ function index_init(code) {
     }, 4000);
 }
 
-// validate runs a simple checksum validator to make sure no simple
-// typing errors have occurred.
-function validate(code) {
-    if (code == "0EM0") {
-        return true;
-    }
-    count = 0;
-    for (i = 0; i < code.length - 1; i++) {
-        count += code.charCodeAt(i);
-    }
-    return (count % 10).toString() == code.substr(5, 1);
-}
+// Adjust the width/height/position of various elements on the laptop graphic.
+// Note that we need to handle BOTH portrait and landscape variants, so we try to maintain at LEAST a square aspect ratio box on
+// screen at all times (i.e. the top half of the laptop), allowing more if there's room.
+function resize() {
+	var screen_top = 196;
+	var screen_left = 164;
+	var screen_bottom = 1076;
+	var screen_right = 1484;
+	var width = window.innerWidth;
+	var height = window.innerHeight;
+	var laptop_width = $("#laptop")[0].naturalWidth;
+	var laptop_height = $("#laptop")[0].naturalHeight;
+	var adjustment_factor = 1.0;
 
-// landing_init is run on document ready for landing.html (the one where
-// users enter their codes).
-function landing_init() {
-    $("#code").on('input', function(code) {
-        sanitize($("#code"));
-    });
-    $("#codeform").submit(function(event) {
-        event.preventDefault();
-        sanitize($("#code"));
-        code = $("#code")[0].value;
-        if (validate(code)) {
-            window.location.href = "/?" + code;
-        }
-    });
-}
+	// Case 1: We're in landscape
+	if(width > height) {
+		// We need to fit the l_h x l_h box in such that the height determines the width.
+		var adjustment_factor = height / laptop_width;
 
-// sanitize makes sure that codes are entered unambiguously and without
-// data entry errors.  Uses the simple parity method to do error detection
-// with the last digit being a checksum.
-//
-// This function uses a base-25 scheme with the chars 0-9A-Z with the following
-// remaps:
-//
-// B is mapped to 8
-// D, O, Q are mapped to 0
-// F is mapped to E
-// I, J, L are mapped to 1
-// S, Z are mapped to 2
-// V is mapped to U
-//
-// This prevents handwritten codes from getting confused when entered by a
-// human and should reduce data entry errors.
-function sanitize(target) {
-    inval = target[0].value;
-    outval = "";
-    for (i = 0; i < 6 && i < inval.length; i++) {
-        c = inval.substr(i, 1).toUpperCase();
-        switch (c) {
-            case 'B':
-                c = '8';
-                break;;
-            case 'D':
-            case 'O':
-            case 'Q':
-                c = '0';
-                break;;
-            case 'F':
-                c = 'E';
-                break;;
-            case 'I':
-            case 'J':
-            case 'L':
-                c = '1';
-                break;;
-            case 'S':
-            case 'Z':
-                c = '2';
-                break;;
-            case 'V':
-                c = 'U';
-                break;;
-        }
-        outval += c;
-    }
-    target[0].value = outval;
-    if (inval.length == 6 || inval == "0EM0") {
-        if (!validate(inval)) {
-            $("#status").addClass("error");
-            $("#status").text("Invalid code.  Please correct it below.");
-        } else {
-            if ($("#status").hasClass("error")) {
-                $("#status").removeClass("error");
-            }
-            $("#status").text("Enter the code from the sticker you were given.");
-        }
-    }
+	// Case 2: We're in portrait
+	} else {
+		// We need to fit the l_h x l_h box in such that the width determines the height.
+		adjustment_factor = width / laptop_width;
+	}
+
+	console.log(adjustment_factor);
+
+	screen_top = Math.round(screen_top * adjustment_factor);
+	screen_left = Math.round(screen_left * adjustment_factor);
+	screen_bottom = Math.round(screen_bottom * adjustment_factor);
+	screen_right = Math.round(screen_right * adjustment_factor);
+	width = Math.round(laptop_width * adjustment_factor);
+	height = Math.round(laptop_height * adjustment_factor);
+
+	var left_margin = Math.round((window.innerWidth - width) / 2);
+
+	$("#laptop").width(width);
+	$("#laptop").height(height);
+	$("#laptop").css("left", left_margin);
+	$("#term_box").css("top", screen_top);
+	$("#term_box").css("left", screen_left + left_margin);
+	$("#term_box").width(screen_right - screen_left);
+	$("#term_box").height(screen_bottom - screen_top);
+	$(window).off("resize");
+	$(window).on("resize", resize);
 }
