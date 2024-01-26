@@ -1,33 +1,18 @@
 <%
 // Simple page to load the message from the database and return it as a JSON blob.
-%/
-<%@ page language="java" contentType="application/json; charset=UTF-8"
-    pageEncoding="UTF-8"%>
-<%@ page import="java.io.*" %>
-<%@ page import="java.sql.*" %>
-<%@ page import="java.util.*" %>
-<%@ page import="org.json.simple.*" %>
+%>
+<%@page language="java" contentType="application/json; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@page trimDirectiveWhitespaces="true"%>
+<%@page import="org.json.simple.*" %>
+<%@include file="common/message.jsp" %>
 <%
-	// Grab the credentials to connect to the database as a Properties object.
-	Properties props = new Properties();
-	props.load(new FileInputStream(request.getRealPath("META-INF/love.properties")));
-	Thread.sleep(1000);
-	// Grab the code from the query string (e.g. https://love.riverbots.org/message.jsp?code=0EM0)
-	String code = request.getParameter("code");
-	// Connect to the database.
-	Class.forName("com.mysql.jdbc.Driver");
-	Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/love", "love", props.getProperty("password"));
-	// Construct the SQL string to get the message sender/recipient/body
-	PreparedStatement stmt = con.prepareStatement("select sender, recipient, body, year from message where code=?");
-	stmt.setString(1, code);
-	ResultSet result = stmt.executeQuery();
-	result.next();
-	// OK, if we got here and didn't error out, then we have one valid message from the database.
-	// Construct (and spit out) the JSON blob.
+	TreeMap<String, String> message = GetMessage(request.getParameter("code"), request.getRealPath("META-INF/love.properties"));
 	JSONObject o = new JSONObject();
-	o.put("sender", result.getString(1));
-	o.put("recipient", result.getString(2));
-	o.put("body", result.getString(3));
-	o.put("year", new Integer(result.getInt(4)));
+	Iterator<String> i = message.keySet().iterator();
+	while(i.hasNext()) {
+		String key = i.next();
+		String val = message.get(key);
+		o.put(key, val);
+	}
 	out.print(o.toJSONString());
 %>

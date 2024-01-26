@@ -26,22 +26,39 @@ body {
 	background-repeat: no-repeat;
 }
 
-.termbox {
+#laptop {
+	position: fixed;
+}
+
+#laptop_box {
+	display: block;
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	z-index: 1;
+}
+
+#term_box {
+	display: block;
+	position: fixed;
+	z-index: 2;
+}
+
+#message {
 	display: block;
 	position: absolute;
-	bottom: 10px;
 	width: 100%;
 	padding: 5px;
-	color: #c0ffc0;
+	color: #ffc0c8;
 	font-family: monospace;
-	font-size: calc(1.5 * (1.1vh + 1.5vw));
+	font-size: calc(1.5 * (1.1vh + 1.1vw));
 }
 
 #content {
 	background: black;
 	background-color: black;
   	background-image: radial-gradient(
-	    rgba(0, 100, 0, 0.75), black 120%
+	    rgba(100, 70, 70, 0.75), black 120%
 	);
 }
 
@@ -56,7 +73,7 @@ body {
 	top: 0px;
 }
 
-#coverbox {
+#cover_box {
 	text-align: center;
 	position: fixed;
 	left: 0px;
@@ -64,6 +81,7 @@ body {
 	width: 100%;
 	height: 100%;
 	background-color: black;
+	z-index: 3;
 }
 
 p {

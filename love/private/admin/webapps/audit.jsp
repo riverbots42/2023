@@ -11,7 +11,7 @@
 // Start by loading the password that we're expecting to get from the user
 // (and with which we'll be connecting to the database).
 Properties props = new Properties();
-props.load(new FileInputStream(request.getRealPath("META-INF/love.properties")));
+props.load(new FileInputStream(request.getRealPath("/etc/love.properties")));
 
 // Now make sure the user has authorization to load this page.  If there's
 // no auth, send an HTTP 401 and require a password.
