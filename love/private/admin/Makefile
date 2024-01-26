@@ -1,16 +1,17 @@
 PLAYBOOKS := $(sort $(filter-out docker-compose.yml, $(wildcard *.yml)))
+DOCKER ?= $(shell if docker --version >/dev/null 2>/dev/null; then echo "docker"; else echo "podman"; fi)
 
 push:	$(PLAYBOOKS)
 	$(MAKE) docker
 	ansible-playbook --ask-become-pass -i ../base/inventory $(PLAYBOOKS)
 
 docker:
-	docker build -t riverbots42/love:latest .
+	$(DOCKER) build -t riverbots42/love:latest .
 
 docker-push:
 	$(MAKE) docker
-	docker login
-	docker push riverbots42/love:latest
+	$(DOCKER) login
+	$(DOCKER) push riverbots42/love:latest
 
 love.properties:	love.properties.enc
 	echo Decrypting $<...
