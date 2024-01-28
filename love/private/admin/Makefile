@@ -2,8 +2,9 @@ PLAYBOOKS := $(sort $(filter-out docker-compose.yml, $(wildcard *.yml)))
 DOCKER ?= $(shell if docker --version >/dev/null 2>/dev/null; then echo "docker"; else echo "podman"; fi)
 
 push:	$(PLAYBOOKS)
+	@if [ "$(PASSPHRASE)" = "" ]; then echo "Must set PASSPHRASE."; false; fi
 	$(MAKE) docker
-	ansible-playbook --ask-become-pass -i ../base/inventory $(PLAYBOOKS)
+	ansible-playbook --ask-become-pass --extra-vars "passphrase=$(PASSPHRASE)" -i ../base/inventory $(PLAYBOOKS)
 
 docker:
 	$(DOCKER) build -t riverbots42/love:latest .
