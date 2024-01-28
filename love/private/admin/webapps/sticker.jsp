@@ -82,7 +82,7 @@ void drawOutlinedString(Graphics2D gc, String str, int x, int y) {
 // Start by loading the password that we're expecting to get from the user
 // (and with which we'll be connecting to the database).
 Properties props = new Properties();
-props.load(new FileInputStream(request.getRealPath("/etc/love.properties")));
+props.load(new FileInputStream(request.getRealPath("WEB-INF/love.properties")));
 
 // Now make sure the user has authorization to load this page.  If there's
 // no auth, send an HTTP 401 and require a password.

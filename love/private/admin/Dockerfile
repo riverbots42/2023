@@ -1,6 +1,6 @@
 FROM tomcat:9
 
-RUN apt update && apt install -y vim
+RUN apt update && apt install -y vim less
 ADD love.properties.enc /love.properties.enc
 RUN mkdir -p /usr/local/tomcat/webapps/ROOT/META-INF
 RUN mkdir -p /usr/local/tomcat/webapps/ROOT/WEB-INF/lib
