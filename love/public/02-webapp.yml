@@ -7,19 +7,25 @@
   tasks:
   - name: Create the appropriate tomcat directory.
     ansible.builtin.file:
-      path: /var/lib/tomcat9/webapps/ROOT/
+      path: /var/lib/tomcat10/webapps/ROOT/
       state: directory
   - name: Copy the files in webapps/ to the target.
     ansible.builtin.copy:
       src: love
-      dest: /var/lib/tomcat9/webapps/ROOT/
+      dest: /var/lib/tomcat10/webapps/ROOT/
       mode: 0644
       owner: root
       group: root
   - name: Copy in the database password.
     ansible.builtin.copy:
       src: love.properties
-      dest: /var/lib/tomcat9/webapps/ROOT/META-INF/love.properties
+      dest: /var/lib/tomcat10/webapps/ROOT/META-INF/love.properties
       mode: 0644
       owner: root
       group: root
+  - name: Copy the MariaDB JDBC driver in place.
+    ansible.builtin.shell: cp /usr/share/maven-repo/org/mariadb/jdbc/mariadb-java-client/debian/mariadb-java-client-debian.jar /var/lib/tomcat10/lib/
+  - name: Copy in the JSON JAR.
+    ansible.builtin.copy:
+      src: json.jar
+      dest: /var/lib/tomcat10/lib/json.jar

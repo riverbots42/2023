@@ -27,7 +27,7 @@ public TreeMap<String, String> GetMessage(String code, String propsfile) {
 		Properties props = new Properties();
 		props.load(new FileInputStream(propsfile));
 		// Connect to the database.
-		Class.forName("com.mysql.jdbc.Driver");
+		Class.forName("org.mariadb.jdbc.Driver");
 		Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/love", "love", props.getProperty("password"));
 		// Construct the SQL string to get the message sender/recipient/body
 		PreparedStatement stmt = con.prepareStatement("select sender, recipient, body, year from message where code=?");

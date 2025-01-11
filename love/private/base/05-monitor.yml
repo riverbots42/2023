@@ -1,0 +1,28 @@
+#
+# This playbook deploys the website code.
+#
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Copy the monitor script file to the target.
+    ansible.builtin.copy:
+      src: monitor.py
+      dest: /usr/local/bin/monitor.py
+      mode: 0755
+      owner: root
+      group: root
+  - name: Copy the systemd unit file to the target.
+    ansible.builtin.copy:
+      src: monitor.service
+      dest: /lib/systemd/system/monitor.service
+      mode: 0644
+      owner: root
+      group: root
+  - name: Activate the network monitor service.
+    ansible.builtin.systemd:
+      name: monitor.service
+      enabled: true
+      masked: false
+      daemon_reload: true
+      state: restarted

@@ -6,6 +6,10 @@
 - hosts: all
   become: true
   tasks:
+  - name: Make sure docker/compose is installed.
+    ansible.builtin.apt:
+      name: docker-compose
+      update-cache: true
   - name: Make sure the compose directory is created.
     ansible.builtin.file:
       path: /etc/docker/compose
