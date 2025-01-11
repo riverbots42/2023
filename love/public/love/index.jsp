@@ -15,7 +15,7 @@ if(request.getQueryString() == null) {
 // If we got here, then some code was added to the URL (e.g. "https://love.riverbots.org/0EM0").
 // Grab the year info and redirect to the final page.
 
-TreeMap<String, String> message = GetMessage(request.getQueryString(), request.getRealPath("META-INF/love.properties"));
+TreeMap<String, String> message = GetMessage(request.getQueryString(), request.getServletContext().getRealPath("META-INF/love.properties"));
 
 if(message.containsKey(ERROR)) {
 	session.setAttribute("poked", "yes");

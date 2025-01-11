@@ -15,13 +15,17 @@
       mode: 0755
   - name: Run the network interface autoconfig script.
     shell: /usr/local/bin/generate-udev-rules
+    register: interface_map
+  - name: Output lines.
+    debug:
+      var: interface_map.stdout_lines
   - name: Copy in the network address config file.
     ansible.builtin.template:
-      src: interfaces
+      src: interfaces.j2
       dest: /etc/network/interfaces
   - name: Copy in the AP config file.
     ansible.builtin.template:
-      src: hostapd.conf
+      src: hostapd.conf.j2
       dest: /etc/hostapd/hostapd.conf
   - name: Enable the hostapd daemon.
     ansible.builtin.systemd:
@@ -29,9 +33,10 @@
       enabled: true
       masked: false
       state: restarted
+    ignore_errors: true
   - name: Copy in the DHCP config file.
     ansible.builtin.template:
-      src: dnsmasq.conf
+      src: dnsmasq.conf.j2
       dest: /etc/dnsmasq.d/dnsmasq.conf
   - name: Enable the DHCP daemon.
     ansible.builtin.systemd:
@@ -39,3 +44,4 @@
       enabled: true
       masked: false
       state: restarted
+    ignore_errors: true

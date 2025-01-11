@@ -6,7 +6,7 @@
 <%@page import="org.json.simple.*" %>
 <%@include file="common/message.jsp" %>
 <%
-	TreeMap<String, String> message = GetMessage(request.getParameter("code"), request.getRealPath("META-INF/love.properties"));
+	TreeMap<String, String> message = GetMessage(request.getParameter("code"), request.getServletContext().getRealPath("META-INF/love.properties"));
 	JSONObject o = new JSONObject();
 	Iterator<String> i = message.keySet().iterator();
 	while(i.hasNext()) {

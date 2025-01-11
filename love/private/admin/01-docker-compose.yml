@@ -6,6 +6,10 @@
 - hosts: all
   become: true
   tasks:
+  - name: Make sure docker/compose is installed.
+    ansible.builtin.apt:
+      name: docker-compose
+      update-cache: true
   - name: Make sure the compose directory is created.
     ansible.builtin.file:
       path: /etc/docker/compose
@@ -18,7 +22,7 @@
       state: directory
   - name: Copy in the docker-compose.yml file.
     ansible.builtin.template:
-      src: docker-compose.yml
+      src: docker-compose.yml.in
       dest: /etc/docker/compose/web/docker-compose.yml
   - name: Copy in the docker-compose config for systemd so we can start the service.
     ansible.builtin.copy:

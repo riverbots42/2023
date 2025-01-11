@@ -12,6 +12,7 @@
         - mariadb-client
         - mariadb-server
         - nginx
-        - openjdk-11-jdk
-        - tomcat9
+        - openjdk-21-jdk
+        - tomcat10
+        - libmariadb-java
       state: latest

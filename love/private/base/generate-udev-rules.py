@@ -87,9 +87,6 @@ def get_interface_map():
     print("WAN detected on %s (%s)!" % (wanintf, wanip))
     interfaces = {
         "wan": None,
-        "lan": None,
-        "wifi-ap": None,
-        "wifi-bot": None,
     }
     for d in glob.glob("/sys/class/net/*"):
         intf = d.split("/")[-1]
@@ -112,7 +109,7 @@ def get_interface_map():
         else:
             print("  Is a LAN interface.")
             interfaces["lan"] = kernels
-    if interfaces["wan"] is not None and interfaces["lan"] is not None and interfaces["wifi-ap"] is not None:
+    if interfaces["wan"] is not None:
         return interfaces
     else:
         return None
@@ -127,12 +124,17 @@ def get_interface_rules():
     rules.append("# the ansible playbook 'network.yml'.  See the Riverbots")
     rules.append("# 2023/love repo for more info.")
     rules.append("")
+    print("has_wan")
     rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", NAME=\"wan\"" % interfaces["wan"])
     rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", PROGRAM=\"/sbin/ip link set %%k address %s\"" % (interfaces["wan"], make_mac()))
-    rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", NAME=\"lan\"" % interfaces["lan"])
-    if interfaces["wifi-ap"] is not None:
+    if "lan" in interfaces:
+        print("has_lan")
+        rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", KERNELS==\"%s\", NAME=\"lan\"" % interfaces["lan"])
+    if "wifi-ap" in interfaces:
+        print("has_wifi_ap")
         rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"%s\", NAME=\"wifi-ap\"" % interfaces["wifi-ap"])
-    if interfaces["wifi-bot"] is not None:
+    if "wifi-bot" in interfaces:
+        print("has_wifi_bot")
         rules.append("SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"%s\", NAME=\"wifi-bot\"" % interfaces["wifi-bot"])
     return "\n".join(rules)
 
