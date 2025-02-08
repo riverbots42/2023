@@ -82,7 +82,7 @@ void drawOutlinedString(Graphics2D gc, String str, int x, int y) {
 // Start by loading the password that we're expecting to get from the user
 // (and with which we'll be connecting to the database).
 Properties props = new Properties();
-props.load(new FileInputStream(request.getRealPath("WEB-INF/love.properties")));
+props.load(new FileInputStream(request.getServletContext().getRealPath("WEB-INF/love.properties")));
 
 // Now make sure the user has authorization to load this page.  If there's
 // no auth, send an HTTP 401 and require a password.
@@ -134,10 +134,10 @@ rs.next();
 String recipient = rs.getString(1);
 rs.close();
 
-File infile = new File(request.getRealPath("sticker.png"));
+File infile = new File(request.getServletContext().getRealPath("sticker.png"));
 BufferedImage image = ImageIO.read(infile);
 Graphics2D gc = (Graphics2D) image.getGraphics();
-File fontfile = new File(request.getRealPath("sticker.ttf"));
+File fontfile = new File(request.getServletContext().getRealPath("sticker.ttf"));
 gc.setFont(Font.createFont(Font.TRUETYPE_FONT, fontfile).deriveFont(Font.BOLD, (float)32.0));
 drawOutlinedString(gc, recipient, RECIPIENT_X, RECIPIENT_Y);
 drawOutlinedString(gc, code, CODE_X, CODE_Y);
