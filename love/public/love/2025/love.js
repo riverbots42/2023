@@ -77,6 +77,17 @@ function tick() {
 //
 // If the user has already interacted with the page, or if the play button is pressed, go to play_index().
 function index_init(code) {
+    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    var audiosrc = "love.ogg";
+    var audiotype = "audio/ogg";
+    if(isSafari) {
+        audiosrc = "love.mp3";
+        audiotype = "audio/mpeg";
+    }
+    console.log("Setting src = " + audiosrc + ", type = " + audiotype);
+    $("#audiosrc")[0].src = audiosrc;
+    $("#audiosrc")[0].type = audiotype;
+
     if(!navigator.userActivation.hasBeenActive) {
         // when the user clicks the play button, hide the coverbox.
         $("#play").click(function() {

@@ -28,8 +28,7 @@ String isPoked = (session.getAttribute("poked") == null) ? "false" : "true";
 			<p id="message" />
 		</div>
 		<audio id="player" controls>
-			<source src="love.ogg" type="audio/ogg" />
-			<source src="love.mp3" type="audio/mpeg" />
+			<source id="audiosrc" src="" type="" />
 		</audio>
 		<div id="cover_box"><img id="play" src="play.gif" /></div>
 	</body>
