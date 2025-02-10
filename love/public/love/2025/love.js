@@ -13,7 +13,7 @@
 
 // lines_to_print consists of a number of lines (which get consumed as a queue).
 // Strings are printed to the content element; numbers are pauses (in ms).
-var lines_to_print = ["RiverbotOS 2.1.1 Booting...", 2000, "Connecting to Lovebot&trade; Server...", 4000];
+var lines_to_print = ["RiverbotOS 2.1.1 Booting...", 2000, "Connecting to Lovebot&trade; Server...", 2000];
 
 // How long to delay between printing chars onscreen.
 var delay_between_chars = 50;
@@ -84,9 +84,11 @@ function index_init(code) {
     var audiosrc = "love.ogg";
     var audiotype = "audio/ogg";
     if(isSafari) {
-        lines_to_print.push("Installing fix for Apple devices...");
+        lines_to_print.push("Installing fix for Apple devices...", 2000);
         audiosrc = "love.mp3";
         audiotype = "audio/mpeg";
+    } else {
+        lines_to_print.push(2000);
     }
     console.log("Setting src = " + audiosrc + ", type = " + audiotype);
     $("#audiosrc")[0].src = audiosrc;
