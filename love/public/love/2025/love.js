@@ -18,10 +18,13 @@ var lines_to_print = ["RiverbotOS 2.0.1 Booting...", 2000, "Connecting to Lovebo
 // How long to delay between printing chars onscreen.
 var delay_between_chars = 50;
 
+// For Safari only, force user to tap before playing audio.
+var wait_for_click = false;
+
 // Tick prints stuff that's in queue to the screen and is run 20 times/sec.
 // So don't put too much stuff in here :-)
 function tick() {
-    if (lines_to_print.length == 0) {
+    if (lines_to_print.length == 0 || wait_for_click) {
         return;
     }
     // shift() has the side effect that line is removed from the array.
@@ -135,7 +138,7 @@ function play_index(code) {
         $.get("../message.jsp?code=" + code, function(data) {
             lines_to_print.push(function() {
                 $("#message").text("");
-                $("#player")[0].play();
+		play_audio();
 	    });
             lines_to_print.push("From:&nbsp;&nbsp;&nbsp;&nbsp;" + data["sender"], 2000);
             lines_to_print.push("To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + data["recipient"], 2000);
@@ -145,6 +148,22 @@ function play_index(code) {
             });
         });
     }, 4000);
+}
+
+function play_audio() {
+    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if( isSafari ) {
+        wait_for_click = true;
+        $("#message").text("-- Tap to Play --");
+        $("#message").on("click", function() {
+            $("#player")[0].play();
+            $("#message").text("");
+            $("#message").off("click");
+            wait_for_click = false;
+        });
+    } else {
+        $("#player")[0].play();
+    }
 }
 
 // Adjust the width/height/position of various elements on the laptop graphic.
