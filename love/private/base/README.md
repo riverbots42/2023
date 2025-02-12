@@ -85,28 +85,28 @@ BECOME password:                             <-- Enter your sudo password here.
 PLAY [all] *************************************************************************************************************************
 
 TASK [Gathering Facts] *************************************************************************************************************
-ok: [lab.riverbots.org]
+ok: [ahs.riverbots.org]
 
 TASK [Install base useful packages] ************************************************************************************************
-ok: [lab.riverbots.org]
+ok: [ahs.riverbots.org]
 
 PLAY RECAP *************************************************************************************************************************
-lab.riverbots.org          : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+ahs.riverbots.org          : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 
 
 PLAY [Configure network interfaces with correct names and WAN MAC.] ****************************************************************
 
 TASK [Gathering Facts] *************************************************************************************************************
-ok: [lab.riverbots.org]
+ok: [ahs.riverbots.org]
 
 TASK [Copy over the network interface autoconfig script.] **************************************************************************
-ok: [lab.riverbots.org]
+ok: [ahs.riverbots.org]
 
 [...]
 
 TASK [Enable the Robot Communication Manager service.] *****************************************************************************
-changed: [lab.riverbots.org]
+changed: [ahs.riverbots.org]
 
 PLAY RECAP *************************************************************************************************************************
-lab.riverbots.org          : ok=20   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+ahs.riverbots.org          : ok=20   changed=6    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```

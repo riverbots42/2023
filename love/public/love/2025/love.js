@@ -13,15 +13,18 @@
 
 // lines_to_print consists of a number of lines (which get consumed as a queue).
 // Strings are printed to the content element; numbers are pauses (in ms).
-var lines_to_print = ["RiverbotOS 2.0.1 Booting...", 2000, "Connecting to Lovebot&trade; Server...", 4000];
+var lines_to_print = ["RiverbotOS 2.1.1 Booting...", 2000, "Connecting to Lovebot&trade; Server...", 2000];
 
 // How long to delay between printing chars onscreen.
 var delay_between_chars = 50;
 
+// For Safari only, force user to tap before playing audio.
+var wait_for_click = false;
+
 // Tick prints stuff that's in queue to the screen and is run 20 times/sec.
 // So don't put too much stuff in here :-)
 function tick() {
-    if (lines_to_print.length == 0) {
+    if (lines_to_print.length == 0 || wait_for_click) {
         return;
     }
     // shift() has the side effect that line is removed from the array.
@@ -77,6 +80,20 @@ function tick() {
 //
 // If the user has already interacted with the page, or if the play button is pressed, go to play_index().
 function index_init(code) {
+    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    var audiosrc = "love.ogg";
+    var audiotype = "audio/ogg";
+    if(isSafari) {
+        lines_to_print.push("Installing fix for Apple devices...", 2000);
+        audiosrc = "love.mp3";
+        audiotype = "audio/mpeg";
+    } else {
+        lines_to_print.push(2000);
+    }
+    console.log("Setting src = " + audiosrc + ", type = " + audiotype);
+    $("#audiosrc")[0].src = audiosrc;
+    $("#audiosrc")[0].type = audiotype;
+
     if(!navigator.userActivation.hasBeenActive) {
         // when the user clicks the play button, hide the coverbox.
         $("#play").click(function() {
@@ -124,7 +141,7 @@ function play_index(code) {
         $.get("../message.jsp?code=" + code, function(data) {
             lines_to_print.push(function() {
                 $("#message").text("");
-                $("#player")[0].play();
+		play_audio();
 	    });
             lines_to_print.push("From:&nbsp;&nbsp;&nbsp;&nbsp;" + data["sender"], 2000);
             lines_to_print.push("To:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + data["recipient"], 2000);
@@ -134,6 +151,22 @@ function play_index(code) {
             });
         });
     }, 4000);
+}
+
+function play_audio() {
+    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if( isSafari ) {
+        wait_for_click = true;
+        $("#message").text("-- Tap to Play --");
+        $("#message").on("click", function() {
+            $("#player")[0].play();
+            $("#message").text("");
+            $("#message").off("click");
+            wait_for_click = false;
+        });
+    } else {
+        $("#player")[0].play();
+    }
 }
 
 // Adjust the width/height/position of various elements on the laptop graphic.

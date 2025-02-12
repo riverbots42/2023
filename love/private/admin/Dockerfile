@@ -1,4 +1,4 @@
-FROM tomcat:9
+FROM tomcat:latest
 
 RUN apt update && apt install -y vim less
 ADD love.properties.enc /love.properties.enc
