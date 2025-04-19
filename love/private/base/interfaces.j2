@@ -32,7 +32,6 @@ auto wifi-ap
 iface wifi-ap inet static
 	address 10.68.2.1
 	netmask 255.255.255.0
-	up /usr/local/bin/nft-rules
 {% endif %}
 
 {% if "has_wifi_bot" in interface_map.stdout_lines %}

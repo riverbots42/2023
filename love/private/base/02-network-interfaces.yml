@@ -52,3 +52,17 @@
       masked: false
       state: restarted
     ignore_errors: true
+  - name: Copy the systemd unit file to the target.
+    ansible.builtin.copy:
+      src: nft-rules.service
+      dest: /lib/systemd/system/nft-rules.service
+      mode: 0644
+      owner: root
+      group: root
+  - name: Activate the network firewall service.
+    ansible.builtin.systemd:
+      name: nft-rules.service
+      enabled: true
+      masked: false
+      daemon_reload: true
+      state: restarted
