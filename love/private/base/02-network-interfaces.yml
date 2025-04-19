@@ -19,6 +19,13 @@
   - name: Output lines.
     debug:
       var: interface_map.stdout_lines
+  - name: Copy in the network address translation rule config script.
+    ansible.builtin.template:
+      src: nft-rules.j2
+      dest: /usr/local/bin/nft-rules
+      owner: root
+      group: root
+      mode: 0755
   - name: Copy in the network address config file.
     ansible.builtin.template:
       src: interfaces.j2

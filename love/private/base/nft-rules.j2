@@ -1,0 +1,111 @@
+#!/usr/bin/python3
+
+import json
+import nftables
+
+RULES = [
+            "add rule nat POSTROUTING oifname wan counter masquerade",
+            "add rule filter FORWARD iifname wifi-ap oifname wan counter accept",
+            "add rule filter FORWARD iifname wan oifname wifi-ap counter accept"
+        ]
+
+SAMPLE_RULE = """
+        {
+            "rule": {
+                "family": "ip",
+                "table": "filter",
+                "chain": "FORWARD",
+                "handle": 36,
+                "expr": [
+                    {
+                        "match": {
+                            "op": "==",
+                            "left": {
+                                "meta": {
+                                    "key": "oifname"
+                                }
+                            },
+                            "right": "wifi-ap"
+                        }
+                    },
+                    {
+                        "counter": {
+                            "packets": 3975,
+                            "bytes": 4539815
+                        }
+                    },
+                    {
+                        "accept": null
+                    }
+                ]
+            }
+        },
+
+        {
+            "rule": {
+                "family": "ip",
+                "table": "nat",
+                "chain": "POSTROUTING",
+                "handle": 27,
+                "expr": [
+                    {
+                        "match": {
+                            "op": "==",
+                            "left": {
+                                "meta": {
+                                    "key": "oifname"
+                                }
+                            },
+                            "right": "wan"
+                        }
+                    },
+                    {
+                        "counter": {
+                            "packets": 0,
+                            "bytes": 0
+                        }
+                    },
+                    {
+                        "masquerade": null
+                    }
+                ]
+            }
+        },
+"""
+
+nft = nftables.Nftables()
+nft.set_json_output(True)
+rc, output, error = nft.cmd("list ruleset")
+rules = json.loads(output)["nftables"]
+
+wifi_rules = dict()
+for rule in rules:
+    is_wan = None
+    is_masq = None
+    if "rule" not in rule:
+        continue
+    rule = rule["rule"]
+    if "table" not in rule or "chain" not in rule or "handle" not in rule:
+        continue
+    key = "delete rule %s %s handle %s" % (rule["table"], rule["chain"], rule["handle"])
+    for expr in rule["expr"]:
+        if "match" in expr:
+            match = expr["match"]
+            if "op" in match and match["op"] != "==":
+                continue
+            if "right" in match and match["right"] == "wifi-ap":
+                wifi_rules[key] = rule
+            elif "right" in match and match["right"] == "wan":
+                is_wan = key
+        if "masquerade" in expr:
+            is_masq = key
+    if is_wan is not None and is_masq is not None:
+        wifi_rules[is_wan] = rule
+
+for rule in wifi_rules:
+    print("Running %s" % rule)
+    nft.cmd(rule)
+
+for rule in RULES:
+    print("Running %s" % rule)
+    rc, output, error = nft.cmd(rule)

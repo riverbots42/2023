@@ -97,7 +97,7 @@ def get_interface_map():
             continue
         if is_wifi:
             print("  Is a WiFi interface: ", end="")
-            if drivers == "ath9k":
+            if drivers == "rtw_8821au":
                 print("AP")
                 interfaces["wifi-ap"] = drivers
             else:

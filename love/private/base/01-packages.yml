@@ -20,6 +20,7 @@
         - iw
         - less
         - nmap
+        - python3-nftables
         - sudo
         - tcpdump
         - vim
