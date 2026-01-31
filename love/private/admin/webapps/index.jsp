@@ -488,7 +488,7 @@ if( code == null && sender == null && recipient == null && body == null && delet
     </head>
     <body>
         <h1><%=title%></h1>
-		<p><a href="//lab.riverbots.org:8080/">Print Custom Stickers</a></p>
+		<p><a href="//lab.riverbots.org/printer/">Print Custom Stickers</a></p>
 <%=form%>
         <!-- START List of All Messages -->
         <h1>All Messages for <%=makeYearSelect(year)%></h1>
