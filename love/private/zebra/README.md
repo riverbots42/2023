@@ -14,13 +14,13 @@ by the [../admin](../admin UI on http://lab.riverbots.org).
 
 ## Deployment
 
-The container must be built on an x86_64 machine and pushed to dockerhub
+The container must be built on an x86_64 machine and pushed to podmanhub
 before it can be deployed, which means using a standard PC, the print
 server itself, or a cloud instance that's on x64.
 
 To build a container, just:
 
 ```
-make docker   # builds the container locally
-make push     # tries to login to dockerhub and push the image
+make podman   # builds the container locally
+make push     # tries to login to podmanhub and push the image
 ```

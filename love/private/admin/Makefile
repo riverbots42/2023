@@ -1,18 +1,17 @@
-PLAYBOOKS := $(sort $(filter-out docker-compose.yml, $(wildcard *.yml)))
-DOCKER ?= $(shell if docker --version >/dev/null 2>/dev/null; then echo "docker"; else echo "podman"; fi)
+PLAYBOOKS := $(sort $(filter-out podman-compose.yml, $(wildcard *.yml)))
 
 push:	$(PLAYBOOKS)
 	@if [ "$(PASSPHRASE)" = "" ]; then echo "Must set PASSPHRASE."; false; fi
-	$(MAKE) docker
+	$(MAKE) podman
 	ansible-playbook --ask-become-pass --extra-vars "passphrase=$(PASSPHRASE)" -i ../base/inventory $(PLAYBOOKS)
 
-docker:
-	$(DOCKER) build -t riverbots42/love:latest .
+podman:
+	podman build -t riverbots42/love:latest .
 
-docker-push:
-	$(MAKE) docker
-	$(DOCKER) login
-	$(DOCKER) push riverbots42/love:latest
+podman-push:
+	$(MAKE) podman
+	podman login
+	podman push riverbots42/love:latest
 
 love.properties:	love.properties.enc
 	echo Decrypting $<...
