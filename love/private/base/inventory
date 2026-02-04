@@ -1,6 +1,7 @@
 [lab]
 # NB if you're installing from scratch, you may need to comment out
 # "lab.riverbots.org" and put in the IP it currently has.
-lab.riverbots.org  # If this has run once already, then you can just use the
+#lab.riverbots.org  # If this has run once already, then you can just use the
                    # name version of lab.riverbots.org.
 #10.68.0.3    # Uncomment and replace if needed
+localhost
