@@ -562,8 +562,10 @@ while(result.next()) {
                 <td>
                     <a href="index.jsp?code=<%=code%>&action=edit"><img src="edit.png" alt="[Edit]" /></a>
                     <a href="index.jsp?code=<%=code%>&delete=ask"><img src="delete.png" alt="[Delete]" /></a>
-                    <a href="sticker.jsp?code=<%=code%>"><img src="print.png" alt="[Show Sticker]" /></a>
-                    <img class="printer" id="<%=code%>" src="print2.png" alt="[Print]" />
+                    <a href="sticker.jsp?code=<%=code%>&sticker=1"><img src="preview-1.png" alt="[Show Sticker 1]" /></a>
+                    <img class="printer1" id="1_<%=code%>" src="print-2.png" alt="[Print]" />
+                    <a href="sticker.jsp?code=<%=code%>&sticker=2"><img src="preview-2.png" alt="[Show Sticker 1]" /></a>
+                    <img class="printer2" id="2_<%=code%>" src="print-2.png" alt="[Print]" />
                 </td>
             </tr>
 <%
@@ -575,8 +577,11 @@ result.close();
     </body>
     <script>
 	$(document).ready(function() {
-            $(".printer").on("click", function() {
-                $.get("sticker.jsp?toprinter=yes&code=" + this.id);
+            $(".printer1").on("click", function() {
+                $.get("sticker.jsp?toprinter=yes&sticker=1&code=" + this.id.substring(2));
+            });
+            $(".printer2").on("click", function() {
+                $.get("sticker.jsp?toprinter=yes&sticker=2&code=" + this.id.substring(2));
             });
 	    $("#year").on("change", function() {
                 window.location = "index.jsp?year=" + $("#year").val();

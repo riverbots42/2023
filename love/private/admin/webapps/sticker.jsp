@@ -1,11 +1,13 @@
 <%@ page language="java" contentType="image/png" trimDirectiveWhitespaces="true" %>
 <%@ page import="java.awt.*" %>
+<%@ page import="java.awt.geom.*" %>
 <%@ page import="java.awt.image.*" %>
 <%@ page import="java.io.*" %>
 <%@ page import="java.net.*" %>
 <%@ page import="java.nio.charset.*" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="java.util.*" %>
+<%@ page import="java.util.regex.*" %>
 <%@ page import="javax.imageio.*" %>
 <%@ page import="com.google.zxing.*" %>
 <%@ page import="com.google.zxing.common.*" %>
@@ -105,16 +107,6 @@ if(password == "" || !props.getProperty("password").equals(password)) {
     return;
 }
 
-// Various locations in the graphic.
-int RECIPIENT_X = Integer.parseInt(props.getProperty("recipient_text_x"));
-int RECIPIENT_Y = Integer.parseInt(props.getProperty("recipient_text_y"));
-int CODE_X = Integer.parseInt(props.getProperty("code_text_x"));
-int CODE_Y = Integer.parseInt(props.getProperty("code_text_y"));
-int QR_X = Integer.parseInt(props.getProperty("code_qr_x"));
-int QR_Y = Integer.parseInt(props.getProperty("code_qr_y"));
-int QR_WIDTH = Integer.parseInt(props.getProperty("code_qr_width"));
-int QR_HEIGHT = Integer.parseInt(props.getProperty("code_qr_height"));
-
 // OK, so for the last bit of setup, we grab a database connection.  Note that
 // we don't get here if authentication is wrong...
 Class.forName("com.mysql.jdbc.Driver");
@@ -126,30 +118,91 @@ if( code == null || code.equals("") ) {
     response.sendError(HttpServletResponse.SC_BAD_REQUEST);
     return;
 }
+
+// Figure out which sticker we're printing on multi-sticker runs.
+int sticker = -1;
+try {
+    sticker = Integer.parseInt(request.getParameter("sticker"));
+} catch(Exception e) {
+    sticker = 1;
+}
+
 // Fetch the recipient info from the database.
-PreparedStatement stmt = conn.prepareStatement("SELECT recipient FROM message WHERE code=?");
+PreparedStatement stmt = conn.prepareStatement("SELECT sender, recipient, body FROM message WHERE code=?");
 stmt.setString(1, code);
 ResultSet rs = stmt.executeQuery();
 rs.next();
-String recipient = rs.getString(1);
+TreeMap<String,String> vars = new TreeMap<String,String>();
+vars.put("url", "https://love.riverbots.org?" + code);
+vars.put("sender", rs.getString(1));
+vars.put("recipient", rs.getString(2));
+vars.put("body", rs.getString(3));
 rs.close();
 
-File infile = new File(request.getRealPath("sticker.png"));
-BufferedImage image = ImageIO.read(infile);
+int sticker_width = Integer.parseInt(props.getProperty("sticker_width"));
+int sticker_height = Integer.parseInt(props.getProperty("sticker_height"));
+int sticker_margin_left = Integer.parseInt(props.getProperty("sticker_margin_left", "0"));
+int sticker_margin_right = Integer.parseInt(props.getProperty("sticker_margin_right", "0"));
+int sticker_margin_top = Integer.parseInt(props.getProperty("sticker_margin_top", "0"));
+int sticker_margin_bottom = Integer.parseInt(props.getProperty("sticker_margin_bottom", "0"));
+
+int qr_x = Integer.parseInt(props.getProperty("qr_x"));
+int qr_y = Integer.parseInt(props.getProperty("qr_y"));
+int qr_width = Integer.parseInt(props.getProperty("qr_width"));
+int qr_height = Integer.parseInt(props.getProperty("qr_height"));
+
+BufferedImage image = new BufferedImage(
+    sticker_width + sticker_margin_left + sticker_margin_right,
+    sticker_height + sticker_margin_top + sticker_margin_bottom,
+    BufferedImage.TYPE_INT_RGB
+);
 Graphics2D gc = (Graphics2D) image.getGraphics();
+gc.setBackground(Color.WHITE);
+gc.setColor(Color.WHITE);
+gc.fillRect(0, 0, image.getWidth(), image.getHeight());
+gc.setColor(Color.BLACK);
 File fontfile = new File(request.getRealPath("sticker.ttf"));
-gc.setFont(Font.createFont(Font.TRUETYPE_FONT, fontfile).deriveFont(Font.BOLD, (float)32.0));
-drawOutlinedString(gc, recipient, RECIPIENT_X, RECIPIENT_Y);
-drawOutlinedString(gc, code, CODE_X, CODE_Y);
-String URL = "https://love.riverbots.org?" + code;
-BitMatrix qr = new MultiFormatWriter().encode(URL, BarcodeFormat.QR_CODE, QR_WIDTH, QR_HEIGHT);
-for(int row=0; row<qr.getHeight(); row++) {
-    for(int col=0; col<qr.getHeight(); col++) {
-        if(qr.get(col, row)) {
-            gc.fillRect(QR_X+col, QR_Y+row, 1, 1);
+Font basefont = Font.createFont(Font.TRUETYPE_FONT, fontfile);
+if( sticker == 1 ) {
+    BitMatrix qr = new MultiFormatWriter().encode(vars.get("url"), BarcodeFormat.QR_CODE, qr_width, qr_height);
+    for(int row=0; row<qr.getHeight(); row++) {
+        for(int col=0; col<qr.getHeight(); col++) {
+            if(qr.get(col, row)) {
+                gc.fillRect(qr_x+col+sticker_margin_left, qr_y+row+sticker_margin_top, 1, 1);
+            }
         }
     }
 }
+
+Pattern reFields = Pattern.compile("^sticker(\\d+)_field(\\d+)_x$");
+for( String key : props.stringPropertyNames() ) {
+    Matcher m = reFields.matcher(key);
+    if( m.matches() ) {
+        int stickerno = Integer.parseInt(m.group(1));
+        if( sticker == stickerno ) {
+            int fieldno = Integer.parseInt(m.group(2));
+            int x = Integer.parseInt(props.getProperty(key, "0"));
+            int y = Integer.parseInt(props.getProperty(String.format("sticker%d_field%d_y", stickerno, fieldno), "0"));
+            String fontsize = props.getProperty(String.format("sticker%d_field%d_size", stickerno, fieldno), "");
+            if( fontsize.equals("") ) {
+                fontsize = "20";
+            }
+            Font font = basefont.deriveFont(Font.BOLD, (float)Integer.parseInt(fontsize));
+            gc.setFont(font);
+            String text = props.getProperty(String.format("sticker%d_field%d_text", stickerno, fieldno), "");
+            if( text != "" ) {
+                Rectangle2D r2 = font.getStringBounds(text, gc.getFontRenderContext());
+                drawOutlinedString(gc, text, x+sticker_margin_left, y+sticker_margin_top+((int)r2.getHeight()));
+            }
+            String var = props.getProperty(String.format("sticker%d_field%d_var", stickerno, fieldno), "");
+            if( var != "" ) {
+                Rectangle2D r2 = font.getStringBounds(vars.get(var), gc.getFontRenderContext());
+                drawOutlinedString(gc, vars.get(var), x+sticker_margin_left, y+sticker_margin_top+((int)r2.getHeight()));
+            }
+        }
+    }
+}
+
 if( toPrinter != null && toPrinter.equals("yes") ) {
     FileOutputStream zpl = new FileOutputStream("/tmp/dump.png");
     ImageIO.write(image, "png", zpl);
