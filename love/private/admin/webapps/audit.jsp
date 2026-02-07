@@ -58,9 +58,10 @@ Connection conn=DriverManager.getConnection("jdbc:mysql://10.68.0.1:3306/love", 
                 <th scope="col">Sender</th>
                 <th scope="col">Recipient</th>
                 <th scope="col">Message</th>
+                <th scope="col">Paid</th>
             </tr>
 <%
-PreparedStatement stmt = conn.prepareStatement("SELECT ts, user, action, code, sender, recipient, body FROM audit ORDER BY ts DESC");
+PreparedStatement stmt = conn.prepareStatement("SELECT ts, user, action, code, sender, recipient, body, paid FROM audit ORDER BY ts DESC");
 ResultSet result = stmt.executeQuery();
 while(result.next()) {
     String ts = StringEscapeUtils.escapeXml(result.getString(1));
@@ -70,6 +71,7 @@ while(result.next()) {
     String sender = StringEscapeUtils.escapeXml(result.getString(5));
     String recipient = StringEscapeUtils.escapeXml(result.getString(6));
     String body = StringEscapeUtils.escapeXml(result.getString(7));
+    String paid = StringEscapeUtils.escapeXml(result.getString(8));
 %>
             <tr>
                 <td><%=ts%></td>
@@ -79,6 +81,7 @@ while(result.next()) {
                 <td><%=sender%></td>
                 <td><%=recipient%></td>
                 <td><%=body%></td>
+                <td><%=paid%></td>
             </tr>
 <%
 }
