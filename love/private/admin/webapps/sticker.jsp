@@ -1,11 +1,13 @@
 <%@ page language="java" contentType="image/png" trimDirectiveWhitespaces="true" %>
 <%@ page import="java.awt.*" %>
+<%@ page import="java.awt.font.*" %>
 <%@ page import="java.awt.geom.*" %>
 <%@ page import="java.awt.image.*" %>
 <%@ page import="java.io.*" %>
 <%@ page import="java.net.*" %>
 <%@ page import="java.nio.charset.*" %>
 <%@ page import="java.sql.*" %>
+<%@ page import="java.text.*" %>
 <%@ page import="java.util.*" %>
 <%@ page import="java.util.regex.*" %>
 <%@ page import="javax.imageio.*" %>
@@ -65,15 +67,37 @@ String post(BufferedImage image) {
     return ret.toString();
 }
 
-void drawOutlinedString(Graphics2D gc, String str, int x, int y) {
+public static void drawComplexWrappedString(Graphics2D gc, String text, int x, int y, int wrapWidth) {
+    String[] words = text.split(" ");
+    StringBuffer line = null;
+    int yy = y;
+    for( String word : words ) {
+        if( line == null ) {
+            line = new StringBuffer(word);
+        } else {
+            Rectangle2D r2 = gc.getFont().getStringBounds(line.toString() + " " + word, gc.getFontRenderContext());
+            if( r2.getWidth() > (double)wrapWidth ) {
+                gc.drawString(line.toString(), x, yy);
+                yy += r2.getHeight();
+                line = new StringBuffer(word);
+            } else {
+                line.append(" ");
+                line.append(word);
+            }
+        }
+    }
+    gc.drawString(line.toString(), x, yy);
+}
+
+void drawOutlinedString(Graphics2D gc, String str, int x, int y, int width) {
     gc.setColor(Color.WHITE);
     for( int xt=x-3; xt<=x+3; xt++ ) {
         for( int yt=y-3; yt<=y+3; yt++) {
-            gc.drawString(str, xt, yt);
+            drawComplexWrappedString(gc, str, xt, yt, width);
         }
     }
     gc.setColor(Color.BLACK);
-    gc.drawString(str, x, y);
+    drawComplexWrappedString(gc, str, x, y, width);
 }
 
 // END SHARED FUNCTION DEFINITIONS.
@@ -192,12 +216,12 @@ for( String key : props.stringPropertyNames() ) {
             String text = props.getProperty(String.format("sticker%d_field%d_text", stickerno, fieldno), "");
             if( text != "" ) {
                 Rectangle2D r2 = font.getStringBounds(text, gc.getFontRenderContext());
-                drawOutlinedString(gc, text, x+sticker_margin_left, y+sticker_margin_top+((int)r2.getHeight()));
+                drawOutlinedString(gc, text, x+sticker_margin_left, y+sticker_margin_top+((int)r2.getHeight()), sticker_width-x);
             }
             String var = props.getProperty(String.format("sticker%d_field%d_var", stickerno, fieldno), "");
             if( var != "" ) {
                 Rectangle2D r2 = font.getStringBounds(vars.get(var), gc.getFontRenderContext());
-                drawOutlinedString(gc, vars.get(var), x+sticker_margin_left, y+sticker_margin_top+((int)r2.getHeight()));
+                drawOutlinedString(gc, vars.get(var), x+sticker_margin_left, y+sticker_margin_top+((int)r2.getHeight()), sticker_width-x);
             }
         }
     }
