@@ -71,8 +71,22 @@ public String makeItem(String name, String value, int length, String label, Stri
     if( length <= 0 ) {
         // This is a hidden field.  Create a hidden entry with a read-only display of the value.
         ret.printf("<input type=\"hidden\" id=\"%s\" name=\"%s\" value=\"%s\" />%s\n", name, name, value, value);
+    } else if( length == 1 ) {
+        // This is a boolean field.  Create a true/false dropdown.
+        Boolean val = new Boolean(value);
+        if( value != null && value.equals("1") ) {
+            val = new Boolean(true);
+        }
+        ret.printf("    <select name=\"%s\" id=\"%s\" class=\"form-control\" aria-describedby=\"%shelp\">", name, name, name);
+        if(val.booleanValue()) {
+            ret.printf("<option value=\"false\">No</option><option value=\"true\" selected=\"1\">Yes</option>");
+        } else {
+            ret.printf("<option value=\"false\" selected=\"1\">No</option><option value=\"true\">Yes</option>");
+        }
+        ret.printf("</select>\n");
+        ret.printf("    <p id=\"%shelp\" class=\"form-text text-muted\">%s</p>\n", name, helptext);
     } else {
-        // ThimakeIs is a visible field.  Create the whole shebang--label, helptext, et al.
+        // This is a visible field.  Create the whole shebang--label, helptext, et al.
         if( value == null || value.equals("") ) {
             ret.printf("    <input type=\"text\" class=\"form-control\" id=\"%s\" name=\"%s\" size=\"%d\" aria-describedby=\"%shelp\" placeholder=\"%s\">\n",
                        name, name, length, name, placeholder);
@@ -124,11 +138,12 @@ public String form(String name, String buttontext, String fields[], Integer year
  * OUT: the resulting form HTML content.
 **/
 public String blankForm(Integer year) {
-    String items[] = new String[4];
+    String items[] = new String[5];
     items[0] = makeItem("sender", null, 50, "Sender", "Joe Sender", "The person who ordered this message.");
     items[1] = makeItem("recipient", null, 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
     items[2] = makeItem("body", null, 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
     items[3] = makeItem("notes", null, 200, "Notes", "Room/Class Notes", "Any notes for this message delivery (not printed).");
+    items[4] = makeItem("paid", null, 1, "Paid", "", "Was payment received?");
     return form("blank", "Create", items, year);
 }
 
@@ -145,12 +160,13 @@ public String editForm(Connection conn, String code, Integer year) {
     if(csrbn == null) {
         return "<p>Error: Couldn't get record for code " + code + "</p>\n";
     }
-    String items[] = new String[5];
+    String items[] = new String[6];
     items[0] = makeItem("code", csrbn[0], 0, "Code", null, null);
     items[1] = makeItem("sender", csrbn[1], 50, "Sender", "Joe Sender", "The person who ordered this message.");
     items[2] = makeItem("recipient", csrbn[2], 50, "Recipient", "Sally Recipient", "The person who should be receiving this message");
     items[3] = makeItem("body", csrbn[3], 200, "Message", "Happy Valentine's Day", "The message that's being sent.");
     items[4] = makeItem("notes", csrbn[4], 200, "Notes", "Delivery notes", "Room/Class Delivery notes (not printed).");
+    items[5] = makeItem("paid", csrbn[5], 1, "Paid", "", "Was payment received?");
     return form("update", "Update", items, year);
 }
 
@@ -170,13 +186,14 @@ public String confirmForm(Connection conn, String code, Integer year) {
     if(csrbn == null) {
         return "<p>Error: Couldn't get record for code " + code + "</p>\n";
     }
-    String items[] = new String[6];
+    String items[] = new String[7];
     items[0] = makeItem("code", csrbn[0], 0, "Code", null, null);
     items[1] = makeItem("sender", csrbn[1], 0, "Sender", null, null);
     items[2] = makeItem("recipient", csrbn[2], 0, "Recipient", null, null);
     items[3] = makeItem("body", csrbn[3], 0, "Message", null, null);
     items[4] = makeItem("body", csrbn[4], 0, "Notes", null, null);
-    items[5] = "<input type=\"hidden\" name=\"delete\" value=\"confirm\">";
+    items[5] = makeItem("paid", csrbn[5], 0, "Paid", null, null);
+    items[6] = "<input type=\"hidden\" name=\"delete\" value=\"confirm\">";
     return form("delete confirm", "Delete", items, year);
 }
 
@@ -218,8 +235,8 @@ public String generateCode() {
  *
  * Side effect: Could throw a SQLException.
 **/
-public void audit(Connection conn, String username, String action, String code, String sender, String recipient, String body, String notes, int year) throws SQLException {
-    PreparedStatement stmt = conn.prepareStatement( "INSERT INTO audit (user, action, code, sender, recipient, body, notes, year) VALUES (?, ?, ?, ?, ?, ?, ?, ?)" );
+public void audit(Connection conn, String username, String action, String code, String sender, String recipient, String body, String notes, int year, boolean paid) throws SQLException {
+    PreparedStatement stmt = conn.prepareStatement( "INSERT INTO audit (user, action, code, sender, recipient, body, notes, year, paid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" );
     stmt.setString(1, username);
     stmt.setString(2, action);
     stmt.setString(3, code);
@@ -228,6 +245,7 @@ public void audit(Connection conn, String username, String action, String code, 
     stmt.setString(6, body);
     stmt.setString(7, notes);
     stmt.setInt(8, year);
+    stmt.setBoolean(9, paid);
     stmt.executeUpdate();
 }
 
@@ -245,9 +263,9 @@ public void audit(Connection conn, String username, String action, String code, 
 public String[] doSelect(Connection conn, String code) {
     PreparedStatement stmt;
     ResultSet rs;
-    String ret[] = new String[5];
+    String ret[] = new String[6];
     try {
-        stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes from message where code=?");
+        stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes, paid from message where code=?");
         stmt.setString(1, code);
         rs = stmt.executeQuery();
         rs.next();
@@ -256,6 +274,7 @@ public String[] doSelect(Connection conn, String code) {
         ret[2] = rs.getString(3);
         ret[3] = rs.getString(4);
         ret[4] = rs.getString(5);
+        ret[5] = rs.getString(6);
         rs.close();
     } catch(SQLException e) {
         return null;
@@ -278,14 +297,14 @@ public String[] doSelect(Connection conn, String code) {
  * Side Effects: redirects the page to edit the message just inserted, adds an
  *               entry to the audit table.  Could throw SQLException.
 **/
-public void doInsert(HttpServletResponse response, Connection conn, String username, String sender, String recipient, String body, String notes, Integer year) throws IOException {
+public void doInsert(HttpServletResponse response, Connection conn, String username, String sender, String recipient, String body, String notes, Integer year, Boolean paid) throws IOException {
     String code = null;
     int attempts_remaining = 10;
     // Since we *could* potentially get duplicate codes, we retry a bunch of
     // times, just in case.
     while(attempts_remaining > 0 && code == null) {
         try {
-            PreparedStatement stmt = conn.prepareStatement( "INSERT INTO message (code, sender, recipient, body, notes, year) VALUES (?, ?, ?, ?, ?, ?)" );
+            PreparedStatement stmt = conn.prepareStatement( "INSERT INTO message (code, sender, recipient, body, notes, year, paid) VALUES (?, ?, ?, ?, ?, ?, ?)" );
             code = generateCode();
             stmt.setString(1, code);
             stmt.setString(2, sender);
@@ -293,6 +312,7 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
             stmt.setString(4, body);
             stmt.setString(5, notes);
             stmt.setInt(6, year.intValue());
+            stmt.setBoolean(7, paid.booleanValue());
             stmt.executeUpdate();
         } catch(SQLException e) {
             attempts_remaining--;
@@ -303,12 +323,12 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
         // We ran OK, so add an audit entry and redirect to the item we just
         // created.
         try {
-            audit(conn, username, "insert", code, sender, recipient, body, notes, year);
+            audit(conn, username, "insert", code, sender, recipient, body, notes, year.intValue(), paid.booleanValue());
         } catch(SQLException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
             return;
         }
-        response.sendRedirect("/?code=" + code);
+        response.sendRedirect("https://admin.riverbots.org?code=" + code + "&action=edit");
         return;
     }
     // If we got here, almost-for-sure there is a legit DB problem.
@@ -326,28 +346,30 @@ public void doInsert(HttpServletResponse response, Connection conn, String usern
  * IN: recipient: The recipient of this message.
  * IN: body:      The body of this message.
  * IN: notes:     The notes assigned to this message.
+ * IN: paid:      Has this message been paid for?
  *
  * OUT: nothing
  *
  * Side Effects: redirects the page to he message just inserted, adds an
  *               entry to the audit table.  Could throw SQLException.
 **/
-public void doUpdate(HttpServletResponse response, Connection conn, String username, String code, String sender, String recipient, String body, String notes, Integer year) throws SQLException, IOException {
-    PreparedStatement stmt = conn.prepareStatement("UPDATE message SET sender=?, recipient=?, body=?, notes=?, year=? where code=?");
+public void doUpdate(HttpServletResponse response, Connection conn, String username, String code, String sender, String recipient, String body, String notes, Integer year, Boolean paid) throws SQLException, IOException {
+    PreparedStatement stmt = conn.prepareStatement("UPDATE message SET sender=?, recipient=?, body=?, notes=?, year=?, paid=? where code=?");
     stmt.setString(1, sender);
     stmt.setString(2, recipient);
     stmt.setString(3, body);
     stmt.setString(4, notes);
     stmt.setInt(5, year.intValue());
-    stmt.setString(6, code);
+    stmt.setBoolean(6, paid.booleanValue());
+    stmt.setString(7, code);
     stmt.executeUpdate();
     try {
-        audit(conn, username, "update", code, sender, recipient, body, notes, year);
+        audit(conn, username, "update", code, sender, recipient, body, notes, year.intValue(), paid.booleanValue());
     } catch(SQLException e) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
         return;
     }
-    response.sendRedirect("/");
+    response.sendRedirect("https://admin.riverbots.org");
     return;
 }
 
@@ -369,12 +391,12 @@ public void doDelete(HttpServletResponse response, Connection conn, String usern
     stmt.setString(1, code);
     stmt.executeUpdate();
     try {
-        audit(conn, username, "delete", code, "", "", "", "", -1);
+        audit(conn, username, "delete", code, "", "", "", "", -1, false);
     } catch(SQLException e) {
         response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Couldn't write to audit table.");
         return;
     }
-    response.sendRedirect("/");
+    response.sendRedirect("https://admin.riverbots.org");
     return;
 }
 
@@ -448,6 +470,9 @@ if( yearStr != null ) {
     }
 }
 
+String paidStr = request.getParameter("paid");
+Boolean paid = new Boolean(paidStr);
+
 if( code == null && sender == null && recipient == null && body == null && delete == null ) {
     // Case 1: Display a blank form.
     form = blankForm(year);
@@ -458,11 +483,11 @@ if( code == null && sender == null && recipient == null && body == null && delet
     title = "Edit Message";
 } else if( code == null && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 3: Run the insert and redirect.
-    doInsert(response, conn, username, sender, recipient, body, notes, year);
+    doInsert(response, conn, username, sender, recipient, body, notes, year, paid);
     return;
 } else if( code != null && !code.equals("") && sender != null && !sender.equals("") && recipient != null && !recipient.equals("") && body != null && !body.equals("") && notes != null && delete == null ) {
     // Case 4: Run the update and redirect.
-    doUpdate(response, conn, username, code, sender, recipient, body, notes, year);
+    doUpdate(response, conn, username, code, sender, recipient, body, notes, year, paid);
     return;
 } else if( code != null && !code.equals("") && delete != null && delete.equals("ask") ) {
     // Case 5: Display the confirmation form (to confirm that we really want to delete).
@@ -499,16 +524,17 @@ if( code == null && sender == null && recipient == null && body == null && delet
                 <th scope="col">Recipient</th>
                 <th scope="col">Message</th>
                 <th scope="col">Notes</th>
+                <th scope="col">Paid</th>
                 <th scope="col">Actions</th>
             </tr>
 <%
 PreparedStatement stmt;
 if( code != null && !code.equals("") ) {
-    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message WHERE year = ? AND code != ? ORDER BY code");
+    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes, paid FROM message WHERE year = ? AND code != ? ORDER BY code");
     stmt.setInt(1, year.intValue());
     stmt.setString(2, code);
 } else {
-    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes FROM message WHERE year = ? ORDER BY code");
+    stmt = conn.prepareStatement("SELECT code, sender, recipient, body, notes, paid FROM message WHERE year = ? ORDER BY code");
     stmt.setInt(1, year.intValue());
 }
 ResultSet result = stmt.executeQuery();
@@ -518,13 +544,21 @@ while(result.next()) {
     recipient = StringEscapeUtils.escapeXml(result.getString(3));
     body = StringEscapeUtils.escapeXml(result.getString(4));
     notes = StringEscapeUtils.escapeXml(result.getString(5));
+    paid = new Boolean(result.getBoolean(6));
+    String paidDisp = "<img src=\"nomoney.png\" alt=\"not paid\" />";
+    String paidClass = "isnotpaid";
+    if( paid.booleanValue() ) {
+        paidDisp = "<img src=\"money.png\" alt=\"paid\" />";
+        paidClass = "ispaid";
+    }
 %>
-            <tr>
+            <tr class="<%=paidClass%>">
                 <td scope="row"><a href="https://love.riverbots.org?<%=code%>" target="_blank"><%=code%></a></td>
                 <td><%=sender%></td>
                 <td><%=recipient%></td>
                 <td><%=body%></td>
                 <td><%=notes%></td>
+                <td><%=paidDisp%></td>
                 <td>
                     <a href="index.jsp?code=<%=code%>&action=edit"><img src="edit.png" alt="[Edit]" /></a>
                     <a href="index.jsp?code=<%=code%>&delete=ask"><img src="delete.png" alt="[Delete]" /></a>
@@ -553,3 +587,4 @@ result.close();
 <%
 // END PAGE CONTENT
 %>
+<!-- vim: set tabstop=4 shiftwidth=4 expandtab softtabstop=0 autoindent smarttab: -->
