@@ -1,0 +1,14 @@
+[Unit]
+Description=%i service with podman compose
+PartOf=podman.service
+After=podman.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/etc/podman/compose/%i
+ExecStart=/usr/bin/podman-compose up -d --remove-orphans
+ExecStop=/usr/bin/podman-compose down
+
+[Install]
+WantedBy=multi-user.target
